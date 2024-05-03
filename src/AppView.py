@@ -1,6 +1,13 @@
 import tkinter as tk
 
+from grid import Grid
+
 class AppView(tk.Tk):
+
+    class Listener:
+        def test_show_agents(self):
+            pass
+
     def __init__(self, screenName: str | None = None, baseName: str | None = None, className: str = "Tk", useTk: bool = True, sync: bool = False, use: str | None = None) -> None:
         super().__init__(screenName, baseName, className, useTk, sync, use)
 
@@ -10,40 +17,25 @@ class AppView(tk.Tk):
         self.resizable(True, True)
         self.title("Grid")
 
-        self.canvas = tk.Canvas(self, bg='white')
-        self.canvas.bind('<Configure>', self.create_grid_nxm)
+        self.hello_label = tk.Label(self, text="Hello world!")
+        self.show_button = tk.Button(self, text="Show agents", command=self.call_controller_show_agents)
+        self.grid = Grid(self, 20, 20)
+
+        self.listener = None
+
+
+    def setListener(self, l:Listener):
+        self.listener = l
 
 
     def show(self):
-        self.canvas.pack(fill="both", expand="true")
+        self.hello_label.pack()
+        self.show_button.pack()
+        self.grid.show()
+
+    def show_agents(self, agents):
+        self.grid.show_agents(agents)
 
 
-    def create_grid(self, event=None):
-        w = self.canvas.winfo_width() # Get current width of canvas
-        h = self.canvas.winfo_height() # Get current height of canvas
-        self.canvas.delete('grid_line') # Will only remove the grid_line
-
-        # Creates all vertical lines at intevals of 100
-        for i in range(0, w, 100):
-            self.canvas.create_line([(i, 0), (i, h)], tag='grid_line')
-
-        # Creates all horizontal lines at intevals of 100
-        for i in range(0, h, 100):
-            self.canvas.create_line([(0, i), (w, i)], tag='grid_line')
-
-
-    def create_grid_nxm(self, event, n=20, m=20):
-        w = self.canvas.winfo_width() # Get current width of canvas
-        h = self.canvas.winfo_height() # Get current height of canvas
-        self.canvas.delete('grid_line') # Will only remove the grid_line
-
-        n_x = w//n
-        n_y = h//m
-
-        # Creates all vertical lines at intevals of 100
-        for i in range(0, w, n_x):
-            self.canvas.create_line([(i, 0), (i, h)], tag='grid_line')
-
-        # Creates all horizontal lines at intevals of 100
-        for i in range(0, h, n_y):
-            self.canvas.create_line([(0, i), (w, i)], tag='grid_line')
+    def call_controller_show_agents(self):
+        self.listener.test_show_agents()

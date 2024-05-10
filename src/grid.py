@@ -12,7 +12,11 @@ class Grid:
 
 
     def show(self):
-        self.canvas.pack(fill="both", expand="true", padx=10, pady=10)
+        self.canvas.pack(side="top", fill="both", expand="true", padx=10, pady=10)
+
+
+    def destroy(self):
+        self.canvas.destroy()
 
 
     def create_grid(self, event=None):
@@ -61,9 +65,15 @@ class Grid:
         u_x = w//self.width
         u_y = h//self.height
 
-        #print(x, y, h, w, u_x, u_y)
+        u = min(u_x, u_y) - 4
 
-        self.canvas.create_oval(x*u_x+3, y*u_y+3, (x+1)*u_x-3, (y+1)*u_y-3, fill=color, outline=color, tags=name)
+        x0 = (x * u_x) + (u_x / 2) - (u / 2)
+        x1 = (x * u_x) + (u_x / 2) + (u / 2)
+        y0 = (y * u_y) + (u_y / 2) - (u / 2)
+        y1 = (y * u_y) + (u_y / 2) + (u / 2)
+
+        #self.canvas.create_oval(x*u_x+3, y*u_y+3, (x+1)*u_x-3, (y+1)*u_y-3, fill=color, outline=color, tags=name)
+        self.canvas.create_oval(x0, y0, x1, y1, fill=color, outline=color, tags=name)
         self.canvas.update()
         #print("agent", name, "drawed at position (", x, ",",  y, ") in", color)
         #print(x*u_x+3, y*u_y+3, (x+1)*u_x-3, (y+1)*u_y-3)
@@ -73,3 +83,9 @@ class Grid:
         self.create_grid_nxm(event)
         if self.current_agents:
             self.show_agents(self.current_agents)
+
+
+    def get_forbiden_cases(self):
+        external = (0, self.width, 0, self.height)
+        internal = ()
+        return external, internal

@@ -7,12 +7,19 @@ from AppView import AppView
 
 class AppController(AppView.Listener):
     def __init__(self) -> None:
+        # Create the view
         self.appView = AppView()
         self.appView.setListener(self)
+        
+        # Create the grid and the gameState
         self.grid = self.appView.createGrid(random=True)
+        self.gameState = self.grid.get_state()
         self.agents = {"agent1": (0,0,"blue"), "agent2": (19,19,"green")}
+        self.gameState.set_agents(agents=self.agents)
+        
         self.running = False
         self.speed_simu = self.appView.get_speed_simu()
+
 
     def run(self):
         self.appView.show()
@@ -25,6 +32,13 @@ class AppController(AppView.Listener):
 
 
     def random_move(self):
+        actions = {}
+        moves = ["N", "S", "O", "E"]
+        for a in self.agents:
+            d = random.choice(moves)
+            actions[a] = ["Move", d]
+        self.gameState.update_state(actions)
+        """
         external, internal = self.grid.get_forbiden_cases()
         for a in self.agents.keys():
             moves = []
@@ -51,6 +65,7 @@ class AppController(AppView.Listener):
             self.agents[a] = (x, y, c)
         
         self.test_show_agents()
+        """
 
 
     def new_map(self):

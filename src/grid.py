@@ -3,6 +3,8 @@ import random
 from math import (sin, cos, pi)
 import copy
 
+from gameState import GameState
+
 
 class Grid:
     def __init__(self, master, random=False, width=20, height=20, num_walls=20, num_resource_ores=2) -> None:
@@ -16,9 +18,14 @@ class Grid:
         self.canvas = tk.Canvas(master, bg='white')
         self.canvas.bind('<Configure>', self.update_canvas)
 
-        self.current_agents = None
         self.walls_pos = []
         self.resource_ores_pos = []
+        
+        self.gameState = GameState(self.width, self.height, self)
+        
+    
+    def get_state(self) -> GameState:
+        return self.gameState
 
 
     def show(self):
@@ -90,6 +97,12 @@ class Grid:
             for (x, y) in self.resource_ores_pos:
                 self._draw_hexagon(x, y, u_x, u_y)
         
+        agents = self.gameState.agents
+        self.gameState.clear()
+        self.gameState.set_ores(self.resource_ores_pos)
+        self.gameState.set_walls(self.walls_pos)
+        self.gameState.set_agents(agents)
+        
         
     def update_map(self, event):
         w = self.canvas.winfo_width() # Get current width of canvas
@@ -144,7 +157,6 @@ class Grid:
 
 
     def show_agents(self, agents:dict):
-        self.current_agents = agents
         for a in agents.keys():
             self.draw_agent(a, agents[a])
 
@@ -183,8 +195,8 @@ class Grid:
             self.update_map(event)
         else:
             self.create_map(event)
-        if self.current_agents:
-            self.show_agents(self.current_agents)
+        if self.gameState.agents:
+            self.show_agents(self.gameState.agents)
 
 
     def get_forbiden_cases(self):

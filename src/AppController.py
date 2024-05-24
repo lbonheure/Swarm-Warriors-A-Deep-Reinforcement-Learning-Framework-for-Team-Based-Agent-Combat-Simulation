@@ -31,11 +31,14 @@ class AppController(AppView.Listener):
 
 
     def show_agents(self):
-        # test
+        """Show the agents on the grid
+        """
         self.grid.show_agents(self.agents)
 
 
     def random_move(self):
+        """Perform a random movement for all agents. (the movement may fail)
+        """
         actions = {}
         moves = ["N", "S", "O", "E"]
         for a in self.agents:
@@ -73,10 +76,14 @@ class AppController(AppView.Listener):
 
 
     def new_map(self):
+        """Change the map (randomly)
+        """
         self.grid.reset_map()
         
         
     def run_simu(self):
+        """Launch the simulation
+        """
         self.running = True
         while self.running:
             self.random_move()
@@ -84,4 +91,6 @@ class AppController(AppView.Listener):
             
             
     def stop_simu(self):
+        """Stop the simulation
+        """
         self.running = False

@@ -18,16 +18,19 @@ class AppController(AppView.Listener):
         self.gameState.set_agents(agents=self.agents)
         self.gameState.set_bases(self.agents)
         
+        # Simulation parameters
         self.running = False
         self.speed_simu = self.appView.get_speed_simu()
 
 
     def run(self):
+        """Launch the application
+        """
         self.appView.show()
         self.appView.mainloop()
 
 
-    def test_show_agents(self):
+    def show_agents(self):
         # test
         self.grid.show_agents(self.agents)
 
@@ -65,7 +68,7 @@ class AppController(AppView.Listener):
                     y += 1
             self.agents[a] = (x, y, c)
         
-        self.test_show_agents()
+        self.show_agents()
         """
 
 

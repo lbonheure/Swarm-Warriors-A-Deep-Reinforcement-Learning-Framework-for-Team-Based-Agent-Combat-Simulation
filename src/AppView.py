@@ -5,8 +5,8 @@ from grid import Grid
 class AppView(tk.Tk):
 
     class Listener:
-        def test_show_agents(self):
-            pass
+        #def show_agents(self):
+        #    pass
         def random_move(self):
             pass
         def new_map(self):
@@ -29,7 +29,7 @@ class AppView(tk.Tk):
 
         #self.hello_label = tk.Label(self, text="Hello world!")
         self.buttons_frame = tk.Frame(self)
-        self.show_button = tk.Button(self.buttons_frame, text="Show agents", command=self.call_controller_show_agents)
+        #self.show_button = tk.Button(self.buttons_frame, text="Show agents", command=self.call_controller_show_agents)
         self.move_button = tk.Button(self.buttons_frame, text="Random Move", command=self.call_controller_random_move)
         self.new_map_button = tk.Button(self.buttons_frame, text="New map", command=self.call_controller_new_map)
         self.run_button = tk.Button(self.buttons_frame, text="Run", command=self.call_controller_run_simu)
@@ -58,7 +58,7 @@ class AppView(tk.Tk):
 
     def show(self):
         #self.hello_label.pack(side="top")
-        self.show_button.pack(side="left", padx=10, pady=5)
+        #self.show_button.pack(side="left", padx=10, pady=5)
         self.move_button.pack(side="left", padx=10, pady=5)
         self.new_map_button.pack(side="left", padx=10, pady=5)
         self.run_button.pack(side="left", padx=10, pady=5)
@@ -69,8 +69,8 @@ class AppView(tk.Tk):
         self.grid.show()
 
 
-    def call_controller_show_agents(self):
-        self.listener.test_show_agents()
+    #def call_controller_show_agents(self):
+    #    self.listener.show_agents()
 
 
     def call_controller_random_move(self):

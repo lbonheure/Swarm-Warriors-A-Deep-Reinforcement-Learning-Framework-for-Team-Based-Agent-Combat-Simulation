@@ -1,3 +1,4 @@
+import copy
 
 def sign(x):
     if x >= 0:
@@ -12,6 +13,7 @@ class GameState:
         self.grid_width = grid_width
         self.grid_height = grid_height
         self.abs_grid = [["_" for j in range(grid_width)] for i in range(grid_height)]
+        self.bases = None
         self.agents = None
         self.infos = {}
         
@@ -32,6 +34,9 @@ class GameState:
             x, y, _ = agents[a]
             self.abs_grid[y][x] = a
         self.get_infos(self.agents)
+        
+    def set_bases(self, bases):
+        self.bases = copy.deepcopy(bases)
             
     
     def update_state(self, actions: dict):
@@ -58,6 +63,8 @@ class GameState:
             return True
         return False
             
+    def is_in_his_base(self, agent):
+        return self.agents[agent] == self.bases[agent]
                 
     def get_infos(self, agents: dict):
         self.infos.clear()

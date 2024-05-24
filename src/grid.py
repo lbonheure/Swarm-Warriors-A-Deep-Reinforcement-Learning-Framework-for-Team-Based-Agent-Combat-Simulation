@@ -71,17 +71,23 @@ class Grid:
         h = self.canvas.winfo_height() # Get current height of canvas
         u_x = w/self.width
         u_y = h/self.height
+        
+        bs = []
+        if self.gameState.bases:
+            for b in self.gameState.bases.keys():
+                x, y, _ = self.gameState.bases[b]
+                bs.append((x, y))
 
         self.walls_pos.clear()
         self.resource_ores_pos.clear()
         if self.random:
             self.canvas.delete("wall")
             for i in range(self.num_walls):
-                x, y = self._free_random_pos_wall()
+                x, y = self._free_random_pos_wall(bs)
                 self.canvas.create_rectangle(x*u_x, y*u_y, (x+1)*u_x, (y+1)*u_y, fill="grey", outline="grey", tags="wall")
             self.canvas.delete("ore")
             for j in range(self.num_resource_ores):
-                x, y = self._free_random_pos_ore()
+                x, y = self._free_random_pos_ore(bs)
                 self._draw_hexagon(x, y, u_x, u_y)
         else:
             if self.width < 20 or self.height < 20:
@@ -103,6 +109,10 @@ class Grid:
         self.gameState.set_walls(self.walls_pos)
         self.gameState.set_agents(agents)
         
+        if self.gameState.bases:
+            for b in self.gameState.bases.keys():
+                self.draw_base(b, self.gameState.bases[b])
+        
         
     def update_map(self, event):
         w = self.canvas.winfo_width() # Get current width of canvas
@@ -115,22 +125,25 @@ class Grid:
             self.canvas.create_rectangle(x*u_x, y*u_y, (x+1)*u_x, (y+1)*u_y, fill="grey", outline="grey", tags="wall")
         for (x, y) in self.resource_ores_pos:
             self._draw_hexagon(x, y, u_x, u_y)
+        if self.gameState.bases:
+            for b in self.gameState.bases.keys():
+                self.draw_base(b, self.gameState.bases[b])
         
         
-    def _free_random_pos_wall(self):
+    def _free_random_pos_wall(self, bs=[]):
         x = random.randint(0, self.width-1)
         y = random.randint(0, self.height-1)
-        while (x, y) in self.walls_pos:
+        while (x, y) in self.walls_pos or (x, y) in bs:
             x = random.randint(0, self.width-1)
             y = random.randint(0, self.height-1)
         self.walls_pos.append((x, y))
         return x, y
     
     
-    def _free_random_pos_ore(self):
+    def _free_random_pos_ore(self, bs=[]):
         x = random.randint(0, self.width-1)
         y = random.randint(0, self.height-1)
-        while (x, y) in self.walls_pos or (x, y) in self.resource_ores_pos:
+        while (x, y) in self.walls_pos or (x, y) in self.resource_ores_pos or (x, y) in bs:
             x = random.randint(0, self.width-1)
             y = random.randint(0, self.height-1)
         self.resource_ores_pos.append((x, y))
@@ -182,6 +195,17 @@ class Grid:
         self.canvas.update()
         #print("agent", name, "drawed at position (", x, ",",  y, ") in", color)
         #print(x*u_x+3, y*u_y+3, (x+1)*u_x-3, (y+1)*u_y-3)
+        
+    
+    def draw_base(self, name, params):
+        x, y, color = params
+        w = self.canvas.winfo_width() # Get current width of canvas
+        h = self.canvas.winfo_height() # Get current height of canvas
+        self.canvas.delete("b:"+name)
+
+        u_x = w/self.width
+        u_y = h/self.height
+        self.canvas.create_rectangle(x*u_x+1, y*u_y+1, (x+1)*u_x-1, (y+1)*u_y-1, fill=None, outline=color, width=3, tags="b:"+name)
 
 
     def reset_map(self):

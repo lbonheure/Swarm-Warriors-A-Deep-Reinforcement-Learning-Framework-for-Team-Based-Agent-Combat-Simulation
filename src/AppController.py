@@ -16,6 +16,7 @@ class AppController(AppView.Listener):
         self.gameState = self.grid.get_state()
         self.agents = {"agent1": (0,0,"blue"), "agent2": (19,19,"green")}
         self.gameState.set_agents(agents=self.agents)
+        self.gameState.set_bases(self.agents)
         
         self.running = False
         self.speed_simu = self.appView.get_speed_simu()

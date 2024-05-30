@@ -84,7 +84,7 @@ class Agent:
     def train_long_memory(self, batch_size=64):
         """
         This function extract previous instances to upgrade the behavior, and update epsilon
-        :param batch_size: Number of instance used the learning
+        :param batch_size: Number of instance used for the learning
         :return: none
         """
         # Selection of "model" in the memory

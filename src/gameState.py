@@ -70,10 +70,11 @@ class GameState:
             agents_pos = []
             resources_pos = []
             walls_pos = []
-            self._observe_surrounding(position=(x, y), v_range=3, agents_pos=agents_pos, resources_pos=resources_pos,
-                                      walls_pos=walls_pos)
+            # self._observe_surrounding(position=(x, y), v_range=3, agents_pos=agents_pos, resources_pos=resources_pos,
+            #                           walls_pos=walls_pos)
 
-            self.infos[a] = {"ally_pos": agents_pos, "resource_pos": resources_pos, "walls_pos": walls_pos}
+            # self.infos[a] = {"ally_pos": agents_pos, "resource_pos": resources_pos, "walls_pos": walls_pos}
+            self.infos[a] = self._observe_surrounding(position=(x, y), v_range=3)
         return self.infos
 
     def _movement(self, agent, direction):
@@ -93,7 +94,37 @@ class GameState:
         self.agents[agent] = (x, y, c)
         return True
 
-    def _observe_surrounding(self, position, v_range: int, agents_pos: list, resources_pos: list, walls_pos: list):
+    def _observe_surrounding(self, position, v_range=3):
+        cx, cy = position
+        agents_pos, resources_pos, walls_pos = [], [], []
+
+        def get_relevant_positions(distance=3):
+            return [(x, y) for x in range(-distance, distance + 1)
+                    for y in range(-distance, distance + 1)
+                    if abs(x) + abs(y) <= distance and (x, y) != (0, 0)]
+
+        def check_position(x, y):
+            if x < 0 or y < 0 or y >= len(self.abs_grid) or x >= len(self.abs_grid[0]):
+                return -1  # Outside grid
+            cell = self.abs_grid[y][x]
+            if cell == "_":
+                return 0  # Nothing
+            elif cell == "W":
+                walls_pos.append((x, y))
+                return 1  # Wall
+            elif cell == "R":
+                resources_pos.append((x, y))
+                return 2  # Resource
+            else:
+                agents_pos.append((x, y))
+                return 3  # Agent
+
+        relevant_positions = get_relevant_positions(v_range)
+        surrounding_info = [check_position(cx + dx, cy + dy) for dx, dy in relevant_positions]
+
+        return surrounding_info
+
+    def _observe_surrounding1(self, position, v_range: int, agents_pos: list, resources_pos: list, walls_pos: list):
         cx, cy = position
         other_agents = []
         for i in range(v_range):

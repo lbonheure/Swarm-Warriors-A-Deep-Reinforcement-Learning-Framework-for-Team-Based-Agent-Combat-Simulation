@@ -4,6 +4,7 @@ import threading as thr
 import time
 
 from AppView import AppView
+from Agent import Agent
 
 
 class AppController(AppView.Listener):
@@ -23,6 +24,9 @@ class AppController(AppView.Listener):
         self.running = False
         self.speed_simu = self.appView.get_speed_simu()
 
+        # init agent
+        self.decision_agent = Agent()
+
     def run(self):
         """Launch the application
         """
@@ -40,7 +44,10 @@ class AppController(AppView.Listener):
         actions = {}
         moves = ["N", "S", "O", "E"]
         for a in self.agents:
-            d = random.choice(moves)
+            # d = random.choice(moves)
+            print(self.gameState.get_infos(self.agents)[a])
+            d = self.decision_agent.act_best(self.gameState.get_infos(self.agents)[a])
+            print(d)
             actions[a] = ["Move", d]
         self.gameState.update_state(actions)
         """

@@ -16,7 +16,7 @@ move_list = [North, South, West, East]
 
 
 class Agent:
-    def __init__(self, id=None, init_pos=None, input_size=12,
+    def __init__(self, id=None, init_pos=None, input_size=24, output_size=4,
                  epsilon=0.9,
                  decay=0.9995,
                  gamma=0.9,
@@ -46,7 +46,7 @@ class Agent:
         # self.model.add(tf.keras.layers.Dense(64, activation="relu"))
         self.model.add(tf.keras.layers.Dense(64, activation="relu"))
         self.model.add(tf.keras.layers.Dense(32, activation="relu"))
-        self.model.add(tf.keras.layers.Dense(4, activation="linear"))
+        self.model.add(tf.keras.layers.Dense(output_size, activation="linear"))
         self.model.compile(
             optimizer=self.opt_fct, loss=self.loss_fct, metrics=self.metrics)
 

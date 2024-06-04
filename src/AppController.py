@@ -1,7 +1,6 @@
 import tkinter as tk
 import random
 import threading as thr
-import concurrent.futures
 import time
 
 from AppView import AppView

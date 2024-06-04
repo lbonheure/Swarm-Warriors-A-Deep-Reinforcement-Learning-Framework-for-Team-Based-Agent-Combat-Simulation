@@ -14,7 +14,6 @@ class GameState:
         self.abs_grid = []
         if self.map:
             self.abs_grid = self._create_abs_grid_from_map(self.map)
-            #[["_" for j in range(self.map.width)] for i in range(self.map.height)]
         self.bases = None
         self.agents = None
         self.infos = {}

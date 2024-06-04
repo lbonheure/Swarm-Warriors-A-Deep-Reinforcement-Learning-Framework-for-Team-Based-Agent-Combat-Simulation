@@ -99,24 +99,23 @@ class GameState:
         agents_pos, resources_pos, walls_pos = [], [], []
 
         def get_relevant_positions(distance=3):
-            return [(x, y) for x in range(-distance, distance + 1)
-                    for y in range(-distance, distance + 1)
-                    if abs(x) + abs(y) <= distance and (x, y) != (0, 0)]
+            return [(x_r, y_r) for x_r in range(-distance, distance + 1) for y_r in range(-distance, distance + 1)
+                    if abs(x_r) + abs(y_r) <= distance and (x_r, y_r) != (0, 0)]
 
-        def check_position(x, y):
-            if x < 0 or y < 0 or y >= len(self.abs_grid) or x >= len(self.abs_grid[0]):
+        def check_position(x_val, y_val):
+            if x_val < 0 or y_val < 0 or y_val >= len(self.abs_grid) or x_val >= len(self.abs_grid[0]):
                 return -1  # Outside grid
-            cell = self.abs_grid[y][x]
+            cell = self.abs_grid[y_val][x_val]
             if cell == "_":
                 return 0  # Nothing
             elif cell == "W":
-                walls_pos.append((x, y))
+                walls_pos.append((x_val, y_val))
                 return 1  # Wall
             elif cell == "R":
-                resources_pos.append((x, y))
+                resources_pos.append((x_val, y_val))
                 return 2  # Resource
             else:
-                agents_pos.append((x, y))
+                agents_pos.append((x_val, y_val))
                 return 3  # Agent
 
         relevant_positions = get_relevant_positions(v_range)

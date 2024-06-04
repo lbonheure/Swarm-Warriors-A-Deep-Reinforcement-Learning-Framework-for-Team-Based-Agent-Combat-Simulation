@@ -43,11 +43,10 @@ class AppController(AppView.Listener):
         """
         actions = {}
         moves = ["N", "S", "O", "E"]
+        agents_info = self.gameState.get_infos(self.agents)
         for a in self.agents:
-            # d = random.choice(moves)
-            print(self.gameState.get_infos(self.agents)[a])
-            d = self.decision_agent.act_best(self.gameState.get_infos(self.agents)[a])
-            print(d)
+            print(a, " ", self.gameState.get_infos(self.agents)[a])
+            d = self.decision_agent.act_train(agents_info[a])
             actions[a] = ["Move", d]
         self.gameState.update_state(actions)
         """

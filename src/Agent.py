@@ -12,8 +12,8 @@ South = (0, -1)
 West = (-1, 0)
 East = (1, 0)
 # List of actions
-move_list = [North, South, West, East]
-
+# move_list = [North, South, West, East]
+move_list = ["N", "S", "W", "E"]
 
 class Agent:
     def __init__(self, id=None, init_pos=None, input_size=24, output_size=4,
@@ -42,8 +42,8 @@ class Agent:
         self.epsilon_min = epsilon_min
         # Structure of NN
         self.model = tf.keras.models.Sequential()
-        self.model.add(tf.keras.layers.Dense(64, activation="relu", input_shape=(input_size,)))
-        # self.model.add(tf.keras.layers.Dense(64, activation="relu"))
+        self.model.add(tf.keras.layers.Dense(128, activation="relu", input_shape=(input_size,)))
+        self.model.add(tf.keras.layers.Dense(64, activation="relu"))
         self.model.add(tf.keras.layers.Dense(64, activation="relu"))
         self.model.add(tf.keras.layers.Dense(32, activation="relu"))
         self.model.add(tf.keras.layers.Dense(output_size, activation="linear"))

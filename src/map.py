@@ -3,13 +3,13 @@ import random
 import copy
 
 MINIMUM_DISTANCE_BASES_RESOURCES = 3
-MINIMUM_DISTANCE_BASES_WALLS = 1
+MINIMUM_DISTANCE_BASES_WALLS = 0
 
 
 class Map:
     """Create and store a game map
     """
-    def __init__(self, random=False, width=20, height=20, num_walls=20, num_resource_ores=2, agent_bases:dict=None) -> None:
+    def __init__(self, random=False, width=20, height=20, num_walls=50, num_resource_ores=2, agent_bases:dict=None) -> None:
         """_summary_
 
         Args:
@@ -117,37 +117,60 @@ class Map:
         # 3. randomly select positions
         if len(possible_positions) < self.num_walls:
             raise Walls_placement_error
+        p_positions = copy.copy(possible_positions)
         for i in range(self.num_walls):
             pos = random.choice(possible_positions)
             self.walls_positions.append(pos)
             possible_positions.remove(pos)
         
-        # TODO
-        """
         # 4. Correct possible errors
         if self.agent_bases:
-            for b in self.agent_bases.keys():
-                xb, yb, _ = self.agent_bases[b]
-                for r_pos in self.resources_positions:
-                    self._force_way((xb, yb), r_pos)
-        """
-                        
+            c = 0
+            while True:
+                c+= 1
+                if c == 1000: # avoid infinite loop
+                    break
+                for b in self.agent_bases.keys():
+                    xb, yb, _ = self.agent_bases[b]
+                    for r_pos in self.resources_positions:
+                        way_exists = self._find_way((xb, yb), r_pos, [])
+                        if not way_exists:
+                            break
+                    if not way_exists:
+                        break
+                if not way_exists:           
+                    possible_positions = copy.copy(p_positions)
+                    self.walls_positions.append(pos)
+                    for i in range(self.num_walls):
+                        pos = random.choice(possible_positions)
+                        self.walls_positions.append(pos)
+                        possible_positions.remove(pos)
+                else:
+                    break
         
-    """
-    def _force_way(self, base, goal):
-        x, y = base
-        while (x, y) != goal:
-            way_exist = False
-            xc = x + 1
-            y = 1
-        
-    # Note: use dijkstra's algorithm to find the shortest path. 
-    # If no path exist, choose randomly an encoutered wall, remove it and add another random wall, then restart.
-    def find_way(self, x, y, goal, visited: list):
-        if (x, y) == goal:
+    
+    def _find_way(self, position, goal, visited: list):
+        if position == goal:
             return True
-        way_exist = self.find_way()
-    """
+        visited.append(position)
+        x, y = position
+        if x+1 < self.width and (x+1, y) not in visited and (x+1, y) not in self.walls_positions:
+            if(self._find_way((x+1, y), goal, visited)):
+                return True
+            
+        if y+1 < self.height and (x, y+1) not in visited and (x, y+1) not in self.walls_positions:
+            if(self._find_way((x, y+1), goal, visited)):
+                return True
+            
+        if x-1 >= 0 and (x-1, y) not in visited and (x-1, y) not in self.walls_positions:
+            if(self._find_way((x-1, y), goal, visited)):
+                return True
+            
+        if y-1 >= 0 and (x, y-1) not in visited and (x, y-1) not in self.walls_positions:
+            if(self._find_way((x, y-1), goal, visited)):
+                return True
+            
+        return False
 
     
 class Resources_placement_error(Exception):

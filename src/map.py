@@ -121,7 +121,8 @@ class Map:
             pos = random.choice(possible_positions)
             self.walls_positions.append(pos)
             possible_positions.remove(pos)
-            
+        
+        # TODO
         """
         # 4. Correct possible errors
         if self.agent_bases:

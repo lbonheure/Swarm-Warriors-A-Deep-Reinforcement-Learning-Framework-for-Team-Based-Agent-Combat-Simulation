@@ -41,6 +41,25 @@ class AppController(AppView.Listener):
         """Show the agents on the grid
         """
         self.grid.update(self.gameState)
+        
+    def train_model(self):
+        # TODO interface graphique permetant de visualiser la progression du training
+        # TODO Init model for training
+        
+        # TODO train model -> 1 shot ? many times ?
+        for i in range(100): # number of move for training
+            actions = {}
+            moves = ["N", "S", "O", "E"]
+            for a in self.agents:
+                # d = random.choice(moves)
+                print(self.gameState.get_infos(self.agents)[a])
+                d = self.decision_agent.act_best(self.gameState.get_infos(self.agents)[a])
+                print(d)
+                actions[a] = ["Move", d]
+            self.gameState.update_state(actions)
+            
+        # TODO Prepare model for simu
+        # TODO Reset gameState
 
     def random_move(self):
         """Perform a random movement for all agents. (the movement may fail)
@@ -54,7 +73,7 @@ class AppController(AppView.Listener):
             print(d)
             actions[a] = ["Move", d]
         self.gameState.update_state(actions)
-        # self.grid.update(self.gameState) # Show changes on the graphical interface
+        self.grid.update(self.gameState) # Show changes on the graphical interface
 
 
     def new_map(self):
@@ -67,6 +86,7 @@ class AppController(AppView.Listener):
     def run_simu(self):
         """Launch the simulation
         """
+        # TODO multithreading
         self.running = True
         while self.running:
             self.random_move()

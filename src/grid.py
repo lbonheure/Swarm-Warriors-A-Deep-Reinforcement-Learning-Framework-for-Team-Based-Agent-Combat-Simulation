@@ -22,9 +22,13 @@ class Grid:
     def update(self, gameState: GameState):
         if self.map is None or self.map != gameState.map:
             self.map = gameState.map
-        self._draw_map()
+            self._draw_map()
         self.agents = gameState.agents
         self._show_agents()
+        
+    def set_map(self, map: Map):
+        self.map = map
+        self._draw_map()
         
         
     def _update_canvas(self, event=None):

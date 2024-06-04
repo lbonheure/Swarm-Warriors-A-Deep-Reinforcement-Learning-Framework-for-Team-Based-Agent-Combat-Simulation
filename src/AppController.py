@@ -1,6 +1,7 @@
 import tkinter as tk
 import random
 import threading as thr
+import concurrent.futures
 import time
 
 from AppView import AppView
@@ -81,16 +82,21 @@ class AppController(AppView.Listener):
         """
         self.map.reset(random=True)
         self.gameState.set_map(self.map)
-        self.grid.update(self.gameState) # Show changes on the graphical interface
+        self.grid.set_map(self.map) # Show changes on the graphical interface
 
     def run_simu(self):
         """Launch the simulation
         """
-        # TODO multithreading
-        self.running = True
+        if thr.active_count() < 2:
+            self.running = True
+            simu_thread = thr.Thread(target=self._run_simu, args=[self.speed_simu])
+            simu_thread.start()
+        
+    def _run_simu(self, speed):
         while self.running:
             self.random_move()
-            time.sleep(1 / self.speed_simu.get())
+            time.sleep(1 / speed.get())
+        
 
     def stop_simu(self):
         """Stop the simulation

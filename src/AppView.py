@@ -27,7 +27,6 @@ class AppView(tk.Tk):
         super().__init__(screenName, baseName, className, useTk, sync, use)
 
         # Window configuration
-        # Window configuration
         self.geometry("850x750")
         self.configure(cursor="arrow")
         self.minsize(850, 750)
@@ -65,23 +64,18 @@ class AppView(tk.Tk):
         """
         return self.speed_var
 
-    def createGrid(self, random=False, row_number=20, column_number=20, num_walls=20, num_resource_ores=2) -> Grid:
+    def createGrid(self, map=None) -> Grid:
         """Create a new grid
 
         Args:
-            random (bool, optional): Specify if the grid must be generated randomly or not. Defaults to False.
-            row_number (int, optional): The number of row in the new grid. Ignored if random is set to False. Defaults to 20.
-            column_number (int, optional): The number of column in the new grid. Ignored if random is set to False. Defaults to 20.
-            num_walls (int, optional): The number of walls in the new grid. Ignored if random is set to False. Defaults to 20.
-            num_resource_ores (int, optional): The number of resource ores in the new grid. Ignored if random is set to False. Defaults to 2.
+            map (Map, optional): the map showed by the grid
 
         Returns:
             Grid: the new grid
         """
         if self.grid:
             self.grid.destroy()
-        self.grid = Grid(self, random, row_number, column_number, num_walls, num_resource_ores)
-        self.grid = Grid(self, random, row_number, column_number, num_walls, num_resource_ores)
+        self.grid = Grid(self, map)
         return self.grid
 
     def show(self):
@@ -101,7 +95,7 @@ class AppView(tk.Tk):
     # def call_controller_show_agents(self):
     #    self.listener.show_agents()
 
-    def _call_controller_random_move(self):
+
     def _call_controller_random_move(self):
         self.listener.random_move()
 

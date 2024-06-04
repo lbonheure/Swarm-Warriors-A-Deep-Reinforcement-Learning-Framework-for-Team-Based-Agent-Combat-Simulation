@@ -4,22 +4,23 @@ import threading as thr
 import time
 
 from AppView import AppView
+from map import Map
+from gameState import GameState
 from Agent import Agent
 
 
 class AppController(AppView.Listener):
     def __init__(self) -> None:
         # Create the view
-        # Create the view
         self.appView = AppView()
         self.appView.setListener(self)
 
-        # Create the grid and the gameState
-        self.grid = self.appView.createGrid(random=True)
-        self.gameState = self.grid.get_state()
+        # Create the map, the grid and the gameState
         self.agents = {"agent1": (0, 0, "blue"), "agent2": (19, 19, "green")}
+        self.map = Map(random=True, agent_bases=self.agents)
+        self.grid = self.appView.createGrid(self.map)
+        self.gameState = GameState(self.map)
         self.gameState.set_agents(agents=self.agents)
-        self.gameState.set_bases(self.agents)
 
         # Simulation parameters
         self.running = False
@@ -39,7 +40,7 @@ class AppController(AppView.Listener):
     def show_agents(self):
         """Show the agents on the grid
         """
-        self.grid.show_agents(self.agents)
+        self.grid.update(self.gameState)
 
     def random_move(self):
         """Perform a random movement for all agents. (the movement may fail)
@@ -53,39 +54,15 @@ class AppController(AppView.Listener):
             print(d)
             actions[a] = ["Move", d]
         self.gameState.update_state(actions)
-        """
-        external, internal = self.grid.get_forbiden_cases()
-        for a in self.agents.keys():
-            moves = []
-            x, y, c = self.agents[a]
-            if x - 1 >= external[0] and (x-1, y) not in internal:
-                moves.append("O")
-            if x + 1 < external[1] and (x+1, y) not in internal:
-                moves.append("E")
-            if y - 1 >= external[2] and (x, y-1) not in internal:
-                moves.append("N")
-            if y + 1 < external[3] and (x, y+1) not in internal:
-                moves.append("S")
+        # self.grid.update(self.gameState) # Show changes on the graphical interface
 
-            m = random.choice(moves)
-            match m:
-                case "O":
-                    x -= 1
-                case "E":
-                    x += 1
-                case "N":
-                    y -= 1
-                case "S":
-                    y += 1
-            self.agents[a] = (x, y, c)
-
-        self.show_agents()
-        """
 
     def new_map(self):
         """Change the map (randomly)
         """
-        self.grid.reset_map()
+        self.map.reset(random=True)
+        self.gameState.set_map(self.map)
+        self.grid.update(self.gameState) # Show changes on the graphical interface
 
     def run_simu(self):
         """Launch the simulation

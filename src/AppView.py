@@ -27,6 +27,7 @@ class AppView(tk.Tk):
         super().__init__(screenName, baseName, className, useTk, sync, use)
 
         # Window configuration
+        # Window configuration
         self.geometry("850x750")
         self.configure(cursor="arrow")
         self.minsize(850, 750)
@@ -80,6 +81,7 @@ class AppView(tk.Tk):
         if self.grid:
             self.grid.destroy()
         self.grid = Grid(self, random, row_number, column_number, num_walls, num_resource_ores)
+        self.grid = Grid(self, random, row_number, column_number, num_walls, num_resource_ores)
         return self.grid
 
     def show(self):
@@ -99,6 +101,7 @@ class AppView(tk.Tk):
     # def call_controller_show_agents(self):
     #    self.listener.show_agents()
 
+    def _call_controller_random_move(self):
     def _call_controller_random_move(self):
         self.listener.random_move()
 

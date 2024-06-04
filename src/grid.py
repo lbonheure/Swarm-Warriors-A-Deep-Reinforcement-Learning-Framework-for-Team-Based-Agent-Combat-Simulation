@@ -4,9 +4,15 @@ from math import (sin, cos, pi)
 import copy
 
 from gameState import GameState
+import random
+from math import (sin, cos, pi)
+import copy
+
+from gameState import GameState
 
 
 class Grid:
+    def __init__(self, master, random=False, width=20, height=20, num_walls=20, num_resource_ores=2) -> None:
     def __init__(self, master, random=False, width=20, height=20, num_walls=20, num_resource_ores=2) -> None:
         self.width = width
         self.height = height
@@ -215,6 +221,8 @@ class Grid:
 
     def get_forbiden_cases(self):
         external = (0, self.width, 0, self.height)
+        internal = copy.copy(self.walls_pos)
+        internal.extend(self.resource_ores_pos)
         internal = copy.copy(self.walls_pos)
         internal.extend(self.resource_ores_pos)
         return external, internal

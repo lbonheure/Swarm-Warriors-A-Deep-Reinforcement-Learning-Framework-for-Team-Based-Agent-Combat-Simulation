@@ -10,6 +10,7 @@ from Agent import Agent
 class AppController(AppView.Listener):
     def __init__(self) -> None:
         # Create the view
+        # Create the view
         self.appView = AppView()
         self.appView.setListener(self)
 
@@ -28,6 +29,8 @@ class AppController(AppView.Listener):
         self.decision_agent = Agent()
 
     def run(self):
+        """Launch the application
+        """
         """Launch the application
         """
         self.appView.show()

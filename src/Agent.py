@@ -12,11 +12,11 @@ South = (0, -1)
 West = (-1, 0)
 East = (1, 0)
 # List of actions
-move_list = [North, South, West, East]
+move_list = ["N", "S", "W", "E", "A"]
 
 
 class Agent:
-    def __init__(self, id=None, init_pos=None, input_size=24, output_size=4,
+    def __init__(self, id=None, init_pos=None, input_size=25, output_size=5,
                  epsilon=0.9,
                  decay=0.9995,
                  gamma=0.9,
@@ -56,30 +56,6 @@ class Agent:
             self.pos_x, self.pos_y = init_pos
 
         self.deplacement_capacity = random.randint(1, 2)
-
-    def get_information(self, game):
-        allies = game.allies_around(self)
-        mine = game.mine_around(self)
-        state = (
-            # Obstacles around Individual
-            game.is_collision((self.pos_x + East[0], self.pos_y + East[1])),
-            game.is_collision((self.pos_x + West[0], self.pos_y + West[1])),
-            game.is_collision((self.pos_x + North[0], self.pos_y + North[1])),
-            game.is_collision((self.pos_x + South[0], self.pos_y + South[1])),
-
-            # Mine location inside individual vision
-            mine[0] > self.pos_x,  # Mine East
-            mine[0] < self.pos_x,  # Mine West
-            mine[1] < self.pos_y,  # Mine North
-            mine[1] > self.pos_y,  # Mine South
-
-            # How many allies in each direction
-            len([ally for ally in allies if ally[0] > self.pos_x]),  # East [1, 0]
-            len([ally for ally in allies if ally[1] < self.pos_x]),  # West [-1, 0]
-            len([ally for ally in allies if ally[0] < self.pos_y]),  # North [0, 1]
-            len([ally for ally in allies if ally[0] > self.pos_y])  # South [0, -1]
-        )
-        return np.array(state, dtype=int)
 
     def train_long_memory(self, batch_size=64):
         """
@@ -272,7 +248,7 @@ class CombatAgent(Agent):
         else:
             return "black"
 
-
+"""
 class ResourceAgent(Agent):
     def __init__(self, id=None, init_pos=None) -> None:
         super().__init__(id, init_pos)
@@ -307,7 +283,8 @@ class ResourceAgent(Agent):
     def move(self):
         if random.random() < self.deplacement_speed:
             super().move()
-
-
+"""
+"""
 class StorageOverload(Exception):
     pass
+"""

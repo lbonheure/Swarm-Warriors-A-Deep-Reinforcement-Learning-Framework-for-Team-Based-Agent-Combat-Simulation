@@ -9,13 +9,13 @@ def sign(x):
 
 
 class GameState:
-    def __init__(self, map: Map=None) -> None:
+    def __init__(self, map: Map=None, agents=None) -> None:
         self.map = map
         self.abs_grid = []
         if self.map:
             self.abs_grid = self._create_abs_grid_from_map(self.map)
         self.bases = None
-        self.agents = None
+        self.agents = agents
         self.infos = {}
         
     def set_map(self, map: Map):
@@ -30,10 +30,14 @@ class GameState:
         self.get_infos(self.agents)
 
     def update_state(self, actions: dict):
-        # template actions: {"agent1":["Move", "E"], "agent2":["Mine"], "agent3":["Move", "N"]}
+        # template actions: {"agent1":"N", "agent2":"A", "agent3":"E"}
+        
+        # TODO gestion attaques
+        
+        
         for a in actions.keys():
-            if actions[a][0] == "Move":
-                d = actions[a][1]
+            if actions[a] != "A":
+                d = actions[a]
                 self._movement(a, d)
         self.get_infos(self.agents)
 
@@ -68,6 +72,8 @@ class GameState:
 
     def _movement(self, agent, direction):
         x, y, c = self.agents[agent]
+        xp = x
+        yp = y
         match direction:
             case "O":
                 x -= 1
@@ -80,6 +86,8 @@ class GameState:
         if x < 0 or x >= self.map.width or y < 0 or y >= self.map.height or self.abs_grid[y][x] == "W" or \
                 self.abs_grid[y][x] == "R":
             return False
+        self.abs_grid[y][x] = self.abs_grid[yp][xp]
+        self.abs_grid[yp][xp] = "_"
         self.agents[agent] = (x, y, c)
         return True
 
@@ -105,6 +113,9 @@ class GameState:
                 resources_pos.append((x, y))
                 return 2  # Resource
             else:
+                da = self.agents[cell][3]
+                color = da.getColor()
+                r = da.getRange()
                 agents_pos.append((x, y))
                 return 3  # Agent
 

@@ -9,7 +9,7 @@ MINIMUM_DISTANCE_BASES_WALLS = 0
 class Map:
     """Create and store a game map
     """
-    def __init__(self, random=False, width=20, height=20, num_walls=50, num_resource_ores=2, agent_bases:dict=None) -> None:
+    def __init__(self, random=False, width=20, height=20, num_walls=40, num_resource_ores=2, agent_bases:dict=None) -> None:
         """_summary_
 
         Args:
@@ -128,7 +128,7 @@ class Map:
             c = 0
             while True:
                 c+= 1
-                if c == 1000: # avoid infinite loop
+                if c == 2000: # avoid infinite loop
                     break
                 for b in self.agent_bases.keys():
                     xb, yb, _ = self.agent_bases[b]

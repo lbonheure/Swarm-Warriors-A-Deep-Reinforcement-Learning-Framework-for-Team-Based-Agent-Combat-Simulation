@@ -3,6 +3,7 @@ import copy
 from map import Map
 from Agent import CombatAgent
 
+
 def sign(x):
     if x >= 0:
         return 1
@@ -11,7 +12,7 @@ def sign(x):
 
 
 class GameState:
-    def __init__(self, map: Map=None, agents=None) -> None:
+    def __init__(self, map: Map = None, agents=None) -> None:
         self.map = map
         self.abs_grid = []
         if self.map:
@@ -19,7 +20,7 @@ class GameState:
         self.bases = None
         self.agents = agents
         self.infos = {}
-        
+
     def set_map(self, map: Map):
         self.map = map
         self.abs_grid = self._create_abs_grid_from_map(self.map)
@@ -64,9 +65,9 @@ class GameState:
         self.infos.clear()
         for a in agents.keys():
             (x, y) = agents[a]["position"]
-            #agents_pos = []
-            #resources_pos = []
-            #walls_pos = []
+            # agents_pos = []
+            # resources_pos = []
+            # walls_pos = []
             # self._observe_surrounding(position=(x, y), v_range=3, agents_pos=agents_pos, resources_pos=resources_pos,
             #                           walls_pos=walls_pos)
 
@@ -76,14 +77,14 @@ class GameState:
 
     def _atk(self, agent):
         da = agent["AI"]
-        da:CombatAgent
+        da: CombatAgent
         r_atk = da.get_range()
         atk = da.get_atk()
         (x, y) = agent["position"]
         hit = False
         reward = 0
-        for i in range(-r_atk, r_atk+1):
-            for j in range(-r_atk, r_atk+1):
+        for i in range(-r_atk, r_atk + 1):
+            for j in range(-r_atk, r_atk + 1):
                 xo = x + i
                 yo = y + j
                 if xo < 0 or xo >= self.map.width or yo < 0 or yo >= self.map.height:
@@ -94,14 +95,12 @@ class GameState:
                         self.agents[target]["hp"] -= atk
                         hit = True
                         if self.agents[target]["AI"].color == da.color:
-                            reward -= 10 # -10 points per hit ally
+                            reward -= 10  # -10 points per hit ally
                         else:
-                            reward += 10 # +10 points per hit ennemy
+                            reward += 10  # +10 points per hit ennemy
         if not hit:
-            reward -= 1 # -1 point if no hit
+            reward -= 1  # -1 point if no hit
         return reward
-
-
 
     def _movement(self, agent, direction):
         (x, y) = self.agents[agent]["position"]
@@ -116,15 +115,18 @@ class GameState:
                 y -= 1
             case "S":
                 y += 1
-        if x < 0 or x >= self.map.width or y < 0 or y >= self.map.height or self.abs_grid[y][x] != "_": # Move only in the grid and to free cells
-            return 0 # reward = 0 if no move
+        if x < 0 or x >= self.map.width or y < 0 or y >= self.map.height or self.abs_grid[y][
+            x] != "_":  # Move only in the grid and to free cells
+            return 0  # reward = 0 if no move
         self.abs_grid[y][x] = self.abs_grid[yp][xp]
         self.abs_grid[yp][xp] = "_"
         self.agents[agent]["position"] = (x, y)
-        return 1 # reward = 1 if move
+        return 1  # reward = 1 if move
 
     def _observe_surrounding(self, position, v_range=3):
         cx, cy = position
+        print(self.abs_grid[cy][cx])
+        da_self = self.agents[self.abs_grid[cy][cx]]["AI"]
         agents_pos, resources_pos, walls_pos = [], [], []
 
         def get_relevant_positions(distance=3):
@@ -145,10 +147,23 @@ class GameState:
                 resources_pos.append((x, y))
                 return 2  # Resource
             else:
-                da = self.agents[cell]["AI"]
+                da_other = self.agents[cell]["AI"]
                 da: CombatAgent
-                color = da.get_color()
-                r = da.get_range()
+                color_other = da_other.get_color()
+                r_other = da_other.get_range()
+
+                color_self = da_self.get_color()
+                if color_self == color_other:
+                    if r_other == 1:
+                        return 3
+                    if r_other == 2:
+                        return 4
+                else:
+                    if r_other == 1:
+                        return 5
+                    if r_other == 2:
+                        return 6
+
                 agents_pos.append((x, y))
                 return 3  # Agent
 
@@ -156,7 +171,7 @@ class GameState:
         surrounding_info = [check_position(cx + dx, cy + dy) for dx, dy in relevant_positions]
 
         return surrounding_info
-    
+
     def _create_abs_grid_from_map(self, map: Map):
         abs_grid = [["_" for j in range(map.width)] for i in range(map.height)]
         for (x, y) in map.walls_positions:
@@ -165,7 +180,7 @@ class GameState:
             abs_grid[y][x] = "R"
         self.bases = map.agents_bases
         for a in self.bases.keys():
-            #print(self.bases[a])
+            # print(self.bases[a])
             (x, y) = self.bases[a]["position"]
             abs_grid[y][x] = a
         return abs_grid

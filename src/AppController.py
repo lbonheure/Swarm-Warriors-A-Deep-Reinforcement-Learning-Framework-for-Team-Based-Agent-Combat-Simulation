@@ -75,7 +75,7 @@ class AppController(AppView.Listener):
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Disable the spam Warning from TensorFlow
 
         # Load the map
-        train_map = Map()
+        train_map = Map(agent_bases=self.agents)
         train_map.load_filename("map0.csv")
         # Place the agents in their bases on the map
         self._reset_pos_agents()
@@ -91,7 +91,6 @@ class AppController(AppView.Listener):
 
                 # Observe the actual states
                 old_states = train_gameState.get_infos(self.agents)
-                print(old_states)
 
                 actions = {}
                 for a in self.agents:
@@ -99,7 +98,8 @@ class AppController(AppView.Listener):
                     hp = self.agents[a]["hp"]
                     if hp > 0:
                         decision_agent: Agent
-                        d = decision_agent.act_train(self.gameState.get_infos(self.agents)[a] + [hp])
+                        old_states[a] = old_states[a] + [hp]
+                        d = decision_agent.act_train(old_states[a])
                         actions[a] = d
 
                 rewards = self.gameState.update_state(actions)
@@ -112,7 +112,9 @@ class AppController(AppView.Listener):
                     if hp <= 0 or done:
                         end = True
                     decision_agent = self.agents[a]["AI"]
+                    new_states[a] = new_states[a]+[hp]
                     # Train the agent over this single step
+                    print(old_states[a], rewards[a], new_states[a], end)
                     decision_agent.training_montage(old_states[a], rewards[a], new_states[a], end)
 
                     # Remember this action and its consequence for later

@@ -12,6 +12,9 @@ class AppView(tk.Tk):
 
         def new_map(self):
             pass
+        
+        def train_model(self):
+            pass
 
         def run_simu(self):
             pass
@@ -38,6 +41,7 @@ class AppView(tk.Tk):
         # self.show_button = tk.Button(self.buttons_frame, text="Show agents", command=self.call_controller_show_agents)
         self.move_button = tk.Button(self.buttons_frame, text="Random Move", command=self._call_controller_random_move)
         self.new_map_button = tk.Button(self.buttons_frame, text="New map", command=self._call_controller_new_map)
+        self.train_button = tk.Button(self.buttons_frame, text="Train model", command=self._call_controller_train_model)
         self.run_button = tk.Button(self.buttons_frame, text="Run", command=self._call_controller_run_simu)
         self.stop_button = tk.Button(self.buttons_frame, text="Stop", command=self._call_controller_stop_simu)
         self.speed_label = tk.Label(self.buttons_frame, text="Speed:")
@@ -64,22 +68,18 @@ class AppView(tk.Tk):
         """
         return self.speed_var
 
-    def createGrid(self, random=False, row_number=20, column_number=20, num_walls=20, num_resource_ores=2) -> Grid:
+    def createGrid(self, map=None) -> Grid:
         """Create a new grid
 
         Args:
-            random (bool, optional): Specify if the grid must be generated randomly or not. Defaults to False.
-            row_number (int, optional): The number of row in the new grid. Ignored if random is set to False. Defaults to 20.
-            column_number (int, optional): The number of column in the new grid. Ignored if random is set to False. Defaults to 20.
-            num_walls (int, optional): The number of walls in the new grid. Ignored if random is set to False. Defaults to 20.
-            num_resource_ores (int, optional): The number of resource ores in the new grid. Ignored if random is set to False. Defaults to 2.
+            map (Map, optional): the map showed by the grid
 
         Returns:
             Grid: the new grid
         """
         if self.grid:
             self.grid.destroy()
-        self.grid = Grid(self, random, row_number, column_number, num_walls, num_resource_ores)
+        self.grid = Grid(self, map)
         return self.grid
 
     def show(self):
@@ -89,6 +89,7 @@ class AppView(tk.Tk):
         # self.show_button.pack(side="left", padx=10, pady=5)
         self.move_button.pack(side="left", padx=10, pady=5)
         self.new_map_button.pack(side="left", padx=10, pady=5)
+        self.train_button.pack(side="left", padx=10, pady=5)
         self.run_button.pack(side="left", padx=10, pady=5)
         self.stop_button.pack(side="left", padx=10, pady=5)
         self.speed_label.pack(side="left", padx=[10, 1], pady=5)
@@ -98,6 +99,7 @@ class AppView(tk.Tk):
 
     # def call_controller_show_agents(self):
     #    self.listener.show_agents()
+
 
     def _call_controller_random_move(self):
         self.listener.random_move()
@@ -113,3 +115,6 @@ class AppView(tk.Tk):
 
     def _call_controller_modify_speed(self, value):
         self.listener.modify_speed(int(value))
+        
+    def _call_controller_train_model(self):
+        self.listener.train_model()

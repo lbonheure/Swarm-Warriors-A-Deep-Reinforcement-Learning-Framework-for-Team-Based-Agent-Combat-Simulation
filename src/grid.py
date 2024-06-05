@@ -1,38 +1,41 @@
 import tkinter as tk
-import random
 from math import (sin, cos, pi)
-import copy
 
+from map import Map
 from gameState import GameState
 
 
 class Grid:
-    def __init__(self, master, random=False, width=20, height=20, num_walls=20, num_resource_ores=2) -> None:
-        self.width = width
-        self.height = height
-        self.random = random
-        self.num_walls = num_walls
-        self.num_resource_ores = num_resource_ores
+    def __init__(self, master, map: Map=None) -> None:
+        self.map = map
         self.map_drawed = False
-
+        self.agents = {}
         self.canvas = tk.Canvas(master, bg='white')
-        self.canvas.bind('<Configure>', self.update_canvas)
-
-        self.walls_pos = []
-        self.resource_ores_pos = []
-
-        self.gameState = GameState(self.width, self.height, self)
-
-    def get_state(self) -> GameState:
-        return self.gameState
+        self.canvas.bind('<Configure>', self._update_canvas)
 
     def show(self):
         self.canvas.pack(side="top", fill="both", expand="true", padx=10, pady=10)
 
     def destroy(self):
         self.canvas.destroy()
+        
+    def update(self, gameState: GameState):
+        if self.map is None or self.map != gameState.map:
+            self.map = gameState.map
+            self._draw_map()
+        self.agents = gameState.agents
+        self._show_agents()
+        
+    def set_map(self, map: Map):
+        self.map = map
+        self._draw_map()
+        
+        
+    def _update_canvas(self, event=None):
+        self._draw_map()
+        self._show_agents()
 
-    def create_grid(self, event=None):
+    def _create_grid(self, event=None):
         w = self.canvas.winfo_width()  # Get current width of canvas
         h = self.canvas.winfo_height()  # Get current height of canvas
         self.canvas.delete('grid_line')  # Will only remove the grid_line
@@ -45,103 +48,48 @@ class Grid:
         for i in range(0, h, 100):
             self.canvas.create_line([(0, i), (w, i)], tag='grid_line')
 
-    def create_grid_nxm(self, event):
+    def _create_grid_nxm(self, event=None):
+        if self.map is None:
+            raise MapIsNoneError
         w = self.canvas.winfo_width()  # Get current width of canvas
         h = self.canvas.winfo_height()  # Get current height of canvas
         self.canvas.delete('grid_line')  # Will only remove the grid_line
 
-        u_x = w / self.width
-        u_y = h / self.height
+        u_x = w / self.map.width
+        u_y = h / self.map.height
 
-        for i in range(self.width):
+        for i in range(self.map.width):
             self.canvas.create_line([(i * u_x, 0), (i * u_x, h)], tag='grid_line')
 
-        for i in range(self.height):
+        for i in range(self.map.height):
             self.canvas.create_line([(0, i * u_y), (w, i * u_y)], tag='grid_line')
 
-    def create_map(self, event):
+    def _draw_map(self, event=None):
+        if self.map is None:
+            raise MapIsNoneError
         self.map_drawed = True
         w = self.canvas.winfo_width()  # Get current width of canvas
         h = self.canvas.winfo_height()  # Get current height of canvas
-        u_x = w / self.width
-        u_y = h / self.height
-
-        bs = []
-        if self.gameState.bases:
-            for b in self.gameState.bases.keys():
-                x, y, _ = self.gameState.bases[b]
-                bs.append((x, y))
-
-        self.walls_pos.clear()
-        self.resource_ores_pos.clear()
-        if self.random:
-            self.canvas.delete("wall")
-            for i in range(self.num_walls):
-                x, y = self._free_random_pos_wall(bs)
-                self.canvas.create_rectangle(x * u_x, y * u_y, (x + 1) * u_x, (y + 1) * u_y, fill="grey",
-                                             outline="grey", tags="wall")
-            self.canvas.delete("ore")
-            for j in range(self.num_resource_ores):
-                x, y = self._free_random_pos_ore(bs)
-                self._draw_hexagon(x, y, u_x, u_y)
-        else:
-            if self.width < 20 or self.height < 20:
-                raise ValueError
-            self.walls_pos = [(7, 9), (8, 9), (9, 9), (11, 9), (13, 9),
-                              (7, 10), (9, 10), (11, 10), (13, 10),
-                              (7, 11), (9, 11), (11, 11), (12, 11), (13, 11)]
-            self.resource_ores_pos = [(8, 10), (12, 10)]
-            self.canvas.delete("wall")
-            for (x, y) in self.walls_pos:
-                self.canvas.create_rectangle(x * u_x, y * u_y, (x + 1) * u_x, (y + 1) * u_y, fill="grey",
-                                             outline="grey", tags="wall")
-            self.canvas.delete("ore")
-            for (x, y) in self.resource_ores_pos:
-                self._draw_hexagon(x, y, u_x, u_y)
-
-        agents = self.gameState.agents
-        self.gameState.clear()
-        self.gameState.set_ores(self.resource_ores_pos)
-        self.gameState.set_walls(self.walls_pos)
-        self.gameState.set_agents(agents)
-
-        if self.gameState.bases:
-            for b in self.gameState.bases.keys():
-                self.draw_base(b, self.gameState.bases[b])
-
-    def update_map(self, event):
-        w = self.canvas.winfo_width()  # Get current width of canvas
-        h = self.canvas.winfo_height()  # Get current height of canvas
-        u_x = w / self.width
-        u_y = h / self.height
+        u_x = w / self.map.width
+        u_y = h / self.map.height
+        
+        # Draw grid
+        self._create_grid_nxm(event)
+        
+        # Draw walls
         self.canvas.delete("wall")
+        for (x, y) in self.map.walls_positions:
+            self.canvas.create_rectangle(x * u_x, y * u_y, (x + 1) * u_x, (y + 1) * u_y, fill="grey", outline="grey", tags="wall")
+        
+        # Draw ores
         self.canvas.delete("ore")
-        for (x, y) in self.walls_pos:
-            self.canvas.create_rectangle(x * u_x, y * u_y, (x + 1) * u_x, (y + 1) * u_y, fill="grey", outline="grey",
-                                         tags="wall")
-        for (x, y) in self.resource_ores_pos:
+        for (x, y) in self.map.resources_positions:
             self._draw_hexagon(x, y, u_x, u_y)
-        if self.gameState.bases:
-            for b in self.gameState.bases.keys():
-                self.draw_base(b, self.gameState.bases[b])
-
-    def _free_random_pos_wall(self, bs=[]):
-        x = random.randint(0, self.width - 1)
-        y = random.randint(0, self.height - 1)
-        while (x, y) in self.walls_pos or (x, y) in bs:
-            x = random.randint(0, self.width - 1)
-            y = random.randint(0, self.height - 1)
-        self.walls_pos.append((x, y))
-        return x, y
-
-    def _free_random_pos_ore(self, bs=[]):
-        x = random.randint(0, self.width - 1)
-        y = random.randint(0, self.height - 1)
-        while (x, y) in self.walls_pos or (x, y) in self.resource_ores_pos or (x, y) in bs:
-            x = random.randint(0, self.width - 1)
-            y = random.randint(0, self.height - 1)
-        self.resource_ores_pos.append((x, y))
-        return x, y
+            
+        # Draw bases
+        if self.map.agent_bases:
+            for b in self.map.agent_bases.keys():
+                self._draw_base(b, self.map.agent_bases[b])
 
     def _draw_hexagon(self, x, y, u_x, u_y):
         u = min(u_x, u_y) - 4
@@ -163,18 +111,20 @@ class Grid:
         self.canvas.create_polygon(x0, y0, x1, y1, x2, y2, x3, y3, x4, y4, x5, y5, splinesteps=6, fill="purple",
                                    outline="yellow", tags="ore")
 
-    def show_agents(self, agents: dict):
-        for a in agents.keys():
-            self.draw_agent(a, agents[a])
+    def _show_agents(self):
+        for a in self.agents.keys():
+            self._draw_agent(a, self.agents[a])
 
-    def draw_agent(self, name, params):
+    def _draw_agent(self, name, params):
+        if self.map is None:
+            raise MapIsNoneError
         x, y, color = params
         w = self.canvas.winfo_width()  # Get current width of canvas
         h = self.canvas.winfo_height()  # Get current height of canvas
         self.canvas.delete(name)
 
-        u_x = w / self.width
-        u_y = h / self.height
+        u_x = w / self.map.width
+        u_y = h / self.map.height
 
         u = min(u_x, u_y) - 4
 
@@ -183,38 +133,23 @@ class Grid:
         y0 = (y * u_y) + (u_y / 2) - (u / 2)
         y1 = (y * u_y) + (u_y / 2) + (u / 2)
 
-        # self.canvas.create_oval(x*u_x+3, y*u_y+3, (x+1)*u_x-3, (y+1)*u_y-3, fill=color, outline=color, tags=name)
         self.canvas.create_oval(x0, y0, x1, y1, fill=color, outline=color, tags=name)
         self.canvas.update()
         # print("agent", name, "drawed at position (", x, ",",  y, ") in", color)
-        # print(x*u_x+3, y*u_y+3, (x+1)*u_x-3, (y+1)*u_y-3)
 
-    def draw_base(self, name, params):
+    def _draw_base(self, name, params):
+        if self.map is None:
+            raise MapIsNoneError
         x, y, color = params
         w = self.canvas.winfo_width()  # Get current width of canvas
         h = self.canvas.winfo_height()  # Get current height of canvas
         self.canvas.delete("b:" + name)
 
-        u_x = w / self.width
-        u_y = h / self.height
+        u_x = w / self.map.width
+        u_y = h / self.map.height
         self.canvas.create_rectangle(x * u_x + 1, y * u_y + 1, (x + 1) * u_x - 1, (y + 1) * u_y - 1, fill=None,
                                      outline=color, width=3, tags="b:" + name)
-
-    def reset_map(self):
-        self.map_drawed = False
-        self.update_canvas()
-
-    def update_canvas(self, event=None):
-        self.create_grid_nxm(event)
-        if self.map_drawed:
-            self.update_map(event)
-        else:
-            self.create_map(event)
-        if self.gameState.agents:
-            self.show_agents(self.gameState.agents)
-
-    def get_forbiden_cases(self):
-        external = (0, self.width, 0, self.height)
-        internal = copy.copy(self.walls_pos)
-        internal.extend(self.resource_ores_pos)
-        return external, internal
+    
+    
+class MapIsNoneError(Exception):
+    pass

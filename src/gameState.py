@@ -1,5 +1,5 @@
 import copy
-
+from map import Map
 
 def sign(x):
     if x >= 0:
@@ -9,25 +9,18 @@ def sign(x):
 
 
 class GameState:
-    def __init__(self, grid_width, grid_height, grid) -> None:
-        self.grid = grid
-        self.grid_width = grid_width
-        self.grid_height = grid_height
-        self.abs_grid = [["_" for j in range(grid_width)] for i in range(grid_height)]
+    def __init__(self, map: Map=None) -> None:
+        self.map = map
+        self.abs_grid = []
+        if self.map:
+            self.abs_grid = self._create_abs_grid_from_map(self.map)
         self.bases = None
         self.agents = None
         self.infos = {}
-
-    def clear(self):
-        self.abs_grid = [["_" for j in range(self.grid_width)] for i in range(self.grid_height)]
-
-    def set_walls(self, walls_pos):
-        for (x, y) in walls_pos:
-            self.abs_grid[y][x] = "W"
-
-    def set_ores(self, ores_pos):
-        for (x, y) in ores_pos:
-            self.abs_grid[y][x] = "R"
+        
+    def set_map(self, map: Map):
+        self.map = map
+        self.abs_grid = self._create_abs_grid_from_map(self.map)
 
     def set_agents(self, agents: dict):
         self.agents = agents
@@ -36,16 +29,12 @@ class GameState:
             self.abs_grid[y][x] = a
         self.get_infos(self.agents)
 
-    def set_bases(self, bases):
-        self.bases = copy.deepcopy(bases)
-
     def update_state(self, actions: dict):
         # template actions: {"agent1":["Move", "E"], "agent2":["Mine"], "agent3":["Move", "N"]}
         for a in actions.keys():
             if actions[a][0] == "Move":
                 d = actions[a][1]
                 self._movement(a, d)
-        self.grid.show_agents(self.agents)
         self.get_infos(self.agents)
 
     def allies_around(self, agent):
@@ -67,9 +56,9 @@ class GameState:
         self.infos.clear()
         for a in agents.keys():
             x, y, _ = agents[a]
-            agents_pos = []
-            resources_pos = []
-            walls_pos = []
+            #agents_pos = []
+            #resources_pos = []
+            #walls_pos = []
             # self._observe_surrounding(position=(x, y), v_range=3, agents_pos=agents_pos, resources_pos=resources_pos,
             #                           walls_pos=walls_pos)
 
@@ -88,7 +77,7 @@ class GameState:
                 y -= 1
             case "S":
                 y += 1
-        if x < 0 or x >= self.grid_width or y < 0 or y >= self.grid_height or self.abs_grid[y][x] == "W" or \
+        if x < 0 or x >= self.map.width or y < 0 or y >= self.map.height or self.abs_grid[y][x] == "W" or \
                 self.abs_grid[y][x] == "R":
             return False
         self.agents[agent] = (x, y, c)
@@ -122,6 +111,15 @@ class GameState:
         surrounding_info = [check_position(cx + dx, cy + dy) for dx, dy in relevant_positions]
 
         return surrounding_info
+    
+    def _create_abs_grid_from_map(self, map: Map):
+        abs_grid = [["_" for j in range(map.width)] for i in range(map.height)]
+        for (x, y) in map.walls_positions:
+            abs_grid[y][x] = "W"
+        for (x, y) in map.resources_positions:
+            abs_grid[y][x] = "R"
+        self.bases = map.agent_bases
+        return abs_grid
 
     def _observe_surrounding1(self, position, v_range: int, agents_pos: list, resources_pos: list, walls_pos: list):
         cx, cy = position

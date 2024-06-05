@@ -26,13 +26,13 @@ class AppController(AppView.Listener):
         self.decisionAgent_blue_range = Agent(color="blue", atk_range=2, atk=10)
         self.decisionAgent_red_melee = Agent(color="red", atk_range=1, atk=10)
         self.decisionAgent_red_range = Agent(color="red", atk_range=2, atk=10)
-        self.agents = {"agent_b1": {"position":(7, 0), "hp":100, "AI":self.decisionAgent_blue_melee},
-                       "agent_b2": {"position":(12, 0), "hp":100, "AI":self.decisionAgent_blue_melee},
-                       "agent_b3": {"position":(0, 0), "hp":70, "AI":self.decisionAgent_blue_range},
+        self.agents = {"agent_b1": {"position":(0, 0), "hp":70, "AI":self.decisionAgent_blue_range},
+                       "agent_b2": {"position":(7, 0), "hp":100, "AI":self.decisionAgent_blue_melee},
+                       "agent_b3": {"position":(12, 0), "hp":100, "AI":self.decisionAgent_blue_melee},
                        "agent_b4": {"position":(19, 0), "hp":70, "AI":self.decisionAgent_blue_range},
-                       "agent_r1": {"position":(7, 19), "hp":100, "AI":self.decisionAgent_red_melee},
-                       "agent_r2": {"position":(12, 19), "hp":100, "AI":self.decisionAgent_red_melee},
-                       "agent_r3": {"position":(0, 19), "hp":70, "AI":self.decisionAgent_red_range},
+                       "agent_r1": {"position":(0, 19), "hp":70, "AI":self.decisionAgent_red_range},
+                       "agent_r2": {"position":(7, 19), "hp":100, "AI":self.decisionAgent_red_melee},
+                       "agent_r3": {"position":(12, 19), "hp":100, "AI":self.decisionAgent_red_melee},
                        "agent_r4": {"position":(19, 19), "hp":70, "AI":self.decisionAgent_red_range}}
         self.map = Map(random=True, agent_bases=self.agents)
         self.grid = self.appView.createGrid(self.map)
@@ -62,7 +62,9 @@ class AppController(AppView.Listener):
         
         # TODO train model -> 1 shot ? many times ?
         train_map = Map()
-        train_map.load("maps/map0.csv")
+        train_map.load_filename("map0.csv")
+        # Place the agents in their bases on the map
+        self._reset_pos_agents()
         train_gameState = GameState(train_map, self.agents)
         # train_gameState.set_agents(agents=self.agents)
         
@@ -98,8 +100,12 @@ class AppController(AppView.Listener):
         """Change the map (randomly)
         """
         self.map.reset(random=True)
+        # Place the agents in their bases on the map
+        self._reset_pos_agents()
         self.gameState.set_map(self.map)
-        self.grid.set_map(self.map) # Show changes on the graphical interface
+        # Show changes on the graphical interface
+        self.grid.set_map(self.map)
+        self.grid.update(self.gameState) 
 
     def run_simu(self):
         """Launch the simulation
@@ -128,7 +134,7 @@ class AppController(AppView.Listener):
             dir = "../maps"
         else:
             dir = "."
-        file = fd.asksaveasfile(defaultextension=".csv", initialdir=dir)
+        file = fd.asksaveasfile(filetypes=[("csv file", "*.csv"),], defaultextension=".csv", initialdir=dir)
         if file:
             self.map.save(file)
     
@@ -139,12 +145,19 @@ class AppController(AppView.Listener):
             dir = "../maps"
         else:
             dir = "."
-        file = fd.askopenfile(defaultextension=".csv", initialdir=dir)
+        file = fd.askopenfile(filetypes=[("csv file", "*.csv"),], defaultextension=".csv", initialdir=dir)
         if file:
             self.map.load(file)
             
         # Place the agents in their bases on the map
-        if self.map.agents_bases:
-            self.agents = copy.copy(self.map.agents_bases)
-            
-        self.grid.set_map(self.map) # Show changes on the graphical interface
+        self._reset_pos_agents()
+        
+        self.gameState.set_map(self.map)
+        # Show changes on the graphical interface
+        self.grid.set_map(self.map)
+        self.grid.update(self.gameState) 
+        
+        
+    def _reset_pos_agents(self):
+        for a in self.agents.keys():
+            self.agents[a]["position"] = self.map.agents_bases[a]["position"]

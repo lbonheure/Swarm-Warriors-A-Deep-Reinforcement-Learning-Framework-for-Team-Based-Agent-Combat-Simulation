@@ -22,10 +22,10 @@ class AppController(AppView.Listener):
 
         # Create the map, the grid and the gameState
         # agent: (x, y, hp, decisionAgent)
-        self.decisionAgent_blue_melee = Agent(color="blue", atk_range=1, atk=10)
-        self.decisionAgent_blue_range = Agent(color="blue", atk_range=2, atk=10)
-        self.decisionAgent_red_melee = Agent(color="red", atk_range=1, atk=10)
-        self.decisionAgent_red_range = Agent(color="red", atk_range=2, atk=10)
+        self.decisionAgent_blue_melee = CombatAgent(color="blue", atk_range=1, atk=10)
+        self.decisionAgent_blue_range = CombatAgent(color="blue", atk_range=2, atk=10)
+        self.decisionAgent_red_melee = CombatAgent(color="red", atk_range=1, atk=10)
+        self.decisionAgent_red_range = CombatAgent(color="red", atk_range=2, atk=10)
         self.agents = {"agent_b1": {"position":(0, 0), "hp":70, "AI":self.decisionAgent_blue_range},
                        "agent_b2": {"position":(7, 0), "hp":100, "AI":self.decisionAgent_blue_melee},
                        "agent_b3": {"position":(12, 0), "hp":100, "AI":self.decisionAgent_blue_melee},

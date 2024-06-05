@@ -8,6 +8,10 @@ from map import Map
 from gameState import GameState
 from Agent import (Agent, CombatAgent)
 
+# For the training
+from tqdm import tqdm
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # To disable the spam Warning from TensorFlow
 
 class AppController(AppView.Listener):
     def __init__(self) -> None:
@@ -17,8 +21,10 @@ class AppController(AppView.Listener):
 
         # Create the map, the grid and the gameState
         # agent: (x, y, hp, decisionAgent)
-        self.decisionAgent_blue_melee = Agent(color="blue", range=1)
-        self.agents = {"agent1": [0, 0, 100, self.decisionAgent_blue_melee], "agent2": (19, 19, "green", True)}
+        self.decisionAgent_blue_melee = CombatAgent(color="blue", range=1)
+        self.decisionAgent_green_melee = CombatAgent(color="green", range=1)
+        self.agents = {"agent1": [0, 0, 100, self.decisionAgent_blue_melee],
+                       "agent2": [19, 19, 100, self.decisionAgent_green_melee]}
         """
         self.agents = {"agent1": CombatAgent((0,0), "blue", output_net=5, range=1),
                        "agent2": CombatAgent((0,0), "blue", output_net=5, range=2),
@@ -52,10 +58,26 @@ class AppController(AppView.Listener):
         # TODO Init model for training
         
         # TODO train model -> 1 shot ? many times ?
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # Disable the spam Warning from TensorFlow
+
+        # Load the map
         train_map = Map()
-        train_map.load("maps/map0.csv")
+        # train_map.load("maps/map0.csv")
         train_gameState = GameState(train_map, self.agents)
         # train_gameState.set_agents(agents=self.agents)
+        episodes = 1000
+        for i in tqdm(range(episodes)):
+            done = False
+            step_nbr = 0
+            while not done:
+                # Observe the actual states
+                old_states = train_gameState.get_infos(self.agents)
+
+                agent_actions = []
+                for agent in self.agents:
+                    agent_actions = agent[3].act_train(old_states[agent])
+
+
 
         for i in range(100): # number of move for training
             actions = {}
@@ -73,8 +95,8 @@ class AppController(AppView.Listener):
         """
         actions = {}
         for a in self.agents:
-            _, _, _, decision_agent = self.agents[a]
-            d = decision_agent.act_best(self.gameState.get_infos(self.agents)[a])
+            _, _, hp, decision_agent = self.agents[a]
+            d = decision_agent.act_best(self.gameState.get_infos(self.agents)[a] + [hp])
             print(d)
             actions[a] = d
         self.gameState.update_state(actions)

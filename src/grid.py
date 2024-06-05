@@ -118,7 +118,9 @@ class Grid:
     def _draw_agent(self, name, params):
         if self.map is None:
             raise MapIsNoneError
-        x, y, color = params
+        print(params)
+        x, y, _, decision_agent = params
+        color = decision_agent.get_color()
         w = self.canvas.winfo_width()  # Get current width of canvas
         h = self.canvas.winfo_height()  # Get current height of canvas
         self.canvas.delete(name)
@@ -140,7 +142,8 @@ class Grid:
     def _draw_base(self, name, params):
         if self.map is None:
             raise MapIsNoneError
-        x, y, color = params
+        x, y, _, decision_agent = params
+        color = decision_agent.get_color()
         w = self.canvas.winfo_width()  # Get current width of canvas
         h = self.canvas.winfo_height()  # Get current height of canvas
         self.canvas.delete("b:" + name)

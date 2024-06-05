@@ -80,7 +80,7 @@ class Map:
                 valid_pos = True
                 if self.agent_bases:
                     for b in self.agent_bases.keys():
-                        xb, yb, _ = self.agent_bases[b]
+                        xb, yb, _, _ = self.agent_bases[b]
                         if abs(x - xb) < MINIMUM_DISTANCE_BASES_RESOURCES and abs(y - yb) < MINIMUM_DISTANCE_BASES_RESOURCES:
                             valid_pos = False
                 if valid_pos:
@@ -106,7 +106,7 @@ class Map:
                 valid_pos = True
                 if self.agent_bases:
                     for b in self.agent_bases.keys():
-                        xb, yb, _ = self.agent_bases[b]
+                        xb, yb, _, _ = self.agent_bases[b]
                         if abs(x - xb) < MINIMUM_DISTANCE_BASES_WALLS and abs(y - yb) < MINIMUM_DISTANCE_BASES_WALLS:
                             valid_pos = False
                 if (x, y) in self.resources_positions:
@@ -131,7 +131,7 @@ class Map:
                 if c == 2000: # avoid infinite loop
                     break
                 for b in self.agent_bases.keys():
-                    xb, yb, _ = self.agent_bases[b]
+                    xb, yb, _, _ = self.agent_bases[b]
                     for r_pos in self.resources_positions:
                         way_exists = self._find_way((xb, yb), r_pos, [])
                         if not way_exists:

@@ -25,7 +25,7 @@ class GameState:
     def set_agents(self, agents: dict):
         self.agents = agents
         for a in agents.keys():
-            x, y, _ = agents[a]
+            x, y, _, _ = agents[a]
             self.abs_grid[y][x] = a
         self.get_infos(self.agents)
 
@@ -39,7 +39,8 @@ class GameState:
             if actions[a] != "A":
                 d = actions[a]
                 self._movement(a, d)
-        self.get_infos(self.agents)
+        # print(self.agents)
+        # self.get_infos(self.agents)
 
     def allies_around(self, agent):
         return self.infos[agent]["ally_pos"]
@@ -59,7 +60,7 @@ class GameState:
     def get_infos(self, agents: dict):
         self.infos.clear()
         for a in agents.keys():
-            x, y, _ = agents[a]
+            x, y, _, _ = agents[a]
             #agents_pos = []
             #resources_pos = []
             #walls_pos = []
@@ -71,7 +72,8 @@ class GameState:
         return self.infos
 
     def _movement(self, agent, direction):
-        x, y, c = self.agents[agent]
+        x, y, _, decision_agent = self.agents[agent]
+        c = decision_agent.get_color()
         xp = x
         yp = y
         match direction:

@@ -15,9 +15,8 @@ from Agent import (Agent, CombatAgent)
 
 # For the training
 from tqdm import tqdm
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # To disable the spam Warning from TensorFlow
-
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # To disable the spam Warning from TensorFlow
 
 class AppController(AppView.Listener):
     def __init__(self) -> None:
@@ -31,14 +30,14 @@ class AppController(AppView.Listener):
         self.decisionAgent_blue_range = CombatAgent(color="blue", atk_range=2, atk=10)
         self.decisionAgent_red_melee = CombatAgent(color="red", atk_range=1, atk=10)
         self.decisionAgent_red_range = CombatAgent(color="red", atk_range=2, atk=10)
-        self.agents = {"agent_b1": {"position": (7, 0), "hp": 100, "AI": self.decisionAgent_blue_melee},
-                       "agent_b2": {"position": (12, 0), "hp": 100, "AI": self.decisionAgent_blue_melee},
-                       "agent_b3": {"position": (0, 0), "hp": 70, "AI": self.decisionAgent_blue_range},
-                       "agent_b4": {"position": (19, 0), "hp": 70, "AI": self.decisionAgent_blue_range},
-                       "agent_r1": {"position": (7, 19), "hp": 100, "AI": self.decisionAgent_red_melee},
-                       "agent_r2": {"position": (12, 19), "hp": 100, "AI": self.decisionAgent_red_melee},
-                       "agent_r3": {"position": (0, 19), "hp": 70, "AI": self.decisionAgent_red_range},
-                       "agent_r4": {"position": (19, 19), "hp": 70, "AI": self.decisionAgent_red_range}}
+        self.agents = {"agent_b1": {"position":(0, 0), "hp":70, "AI":self.decisionAgent_blue_range},
+                       "agent_b2": {"position":(7, 0), "hp":100, "AI":self.decisionAgent_blue_melee},
+                       "agent_b3": {"position":(12, 0), "hp":100, "AI":self.decisionAgent_blue_melee},
+                       "agent_b4": {"position":(19, 0), "hp":70, "AI":self.decisionAgent_blue_range},
+                       "agent_r1": {"position":(0, 19), "hp":70, "AI":self.decisionAgent_red_range},
+                       "agent_r2": {"position":(7, 19), "hp":100, "AI":self.decisionAgent_red_melee},
+                       "agent_r3": {"position":(12, 19), "hp":100, "AI":self.decisionAgent_red_melee},
+                       "agent_r4": {"position":(19, 19), "hp":70, "AI":self.decisionAgent_red_range}}
         self.map = Map(random=True, agent_bases=self.agents)
         self.grid = self.appView.createGrid(self.map)
         self.gameState = GameState(self.map)
@@ -69,8 +68,10 @@ class AppController(AppView.Listener):
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Disable the spam Warning from TensorFlow
 
         # Load the map
-        train_map = Map(random=True, agent_bases=self.agents)
-        # train_map.load("maps/map0.csv")
+        train_map = Map()
+        train_map.load_filename("map0.csv")
+        # Place the agents in their bases on the map
+        self._reset_pos_agents()
         train_gameState = GameState(train_map, self.agents)
         # train_gameState.set_agents(agents=self.agents)
         episodes = 1000
@@ -122,18 +123,23 @@ class AppController(AppView.Listener):
         for a in self.agents:
             decision_agent = self.agents[a]["AI"]
             hp = self.agents[a]["hp"]
-            decision_agent: Agent
+            decision_agent:Agent
             d = decision_agent.act_best(self.gameState.get_infos(self.agents)[a] + [hp])
             actions[a] = d
         self.gameState.update_state(actions)
         self.grid.update(self.gameState)  # Show changes on the graphical interface
 
+
     def new_map(self):
         """Change the map (randomly)
         """
         self.map.reset(random=True)
+        # Place the agents in their bases on the map
+        self._reset_pos_agents()
         self.gameState.set_map(self.map)
-        self.grid.set_map(self.map)  # Show changes on the graphical interface
+        # Show changes on the graphical interface
+        self.grid.set_map(self.map)
+        self.grid.update(self.gameState)
 
     def run_simu(self):
         """Launch the simulation
@@ -160,7 +166,7 @@ class AppController(AppView.Listener):
             dir = "../maps"
         else:
             dir = "."
-        file = fd.asksaveasfile(defaultextension=".csv", initialdir=dir)
+        file = fd.asksaveasfile(filetypes=[("csv file", "*.csv"),], defaultextension=".csv", initialdir=dir)
         if file:
             self.map.save(file)
 
@@ -171,12 +177,19 @@ class AppController(AppView.Listener):
             dir = "../maps"
         else:
             dir = "."
-        file = fd.askopenfile(defaultextension=".csv", initialdir=dir)
+        file = fd.askopenfile(filetypes=[("csv file", "*.csv"),], defaultextension=".csv", initialdir=dir)
         if file:
             self.map.load(file)
 
         # Place the agents in their bases on the map
-        if self.map.agents_bases:
-            self.agents = copy.copy(self.map.agents_bases)
+        self._reset_pos_agents()
 
-        self.grid.set_map(self.map)  # Show changes on the graphical interface
+        self.gameState.set_map(self.map)
+        # Show changes on the graphical interface
+        self.grid.set_map(self.map)
+        self.grid.update(self.gameState)
+
+
+    def _reset_pos_agents(self):
+        for a in self.agents.keys():
+            self.agents[a]["position"] = self.map.agents_bases[a]["position"]

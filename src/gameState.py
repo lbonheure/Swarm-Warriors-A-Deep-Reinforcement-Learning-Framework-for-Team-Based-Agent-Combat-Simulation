@@ -1,5 +1,7 @@
 import copy
+
 from map import Map
+from Agent import CombatAgent
 
 def sign(x):
     if x >= 0:
@@ -31,18 +33,17 @@ class GameState:
 
     def update_state(self, actions: dict):
         # template actions: {"agent1":"N", "agent2":"A", "agent3":"E"}
-        
-        # TODO gestion attaques
+        rewards = {}
         for a in actions.keys():
             if actions[a] == "A":
-                pass
-                #self._atk(a)
-        
+                rewards[a] = self._atk(self.agents[a])
+
         for a in actions.keys():
             if actions[a] != "A":
                 d = actions[a]
-                self._movement(a, d)
+                rewards[a] = self._movement(a, d)
         self.get_infos(self.agents)
+        return rewards
 
     def allies_around(self, agent):
         return self.infos[agent]["ally_pos"]
@@ -73,6 +74,35 @@ class GameState:
             self.infos[a] = self._observe_surrounding(position=(x, y), v_range=3)
         return self.infos
 
+    def _atk(self, agent):
+        da = agent["AI"]
+        da:CombatAgent
+        r_atk = da.get_range()
+        atk = da.get_atk()
+        (x, y) = agent["position"]
+        hit = False
+        reward = 0
+        for i in range(-r_atk, r_atk+1):
+            for j in range(-r_atk, r_atk+1):
+                xo = x + i
+                yo = y + j
+                if xo < 0 or xo >= self.map.width or yo < 0 or yo >= self.map.height:
+                    continue
+                if (abs(xo - x) == r_atk and abs(yo - y) <= r_atk) or (abs(xo - x) <= r_atk and abs(yo - y) == r_atk):
+                    if self.abs_grid[yo][xo] != "W" and self.abs_grid[yo][xo] != "R" and self.abs_grid[yo][xo] != "_":
+                        target = self.abs_grid[yo][xo]
+                        self.agents[target]["hp"] -= atk
+                        hit = True
+                        if self.agents[target]["AI"].color == da.color:
+                            reward -= 10 # -10 points per hit ally
+                        else:
+                            reward += 10 # +10 points per hit ennemy
+        if not hit:
+            reward -= 1 # -1 point if no hit
+        return reward
+
+
+
     def _movement(self, agent, direction):
         (x, y) = self.agents[agent]["position"]
         xp = x
@@ -86,13 +116,12 @@ class GameState:
                 y -= 1
             case "S":
                 y += 1
-        if x < 0 or x >= self.map.width or y < 0 or y >= self.map.height or self.abs_grid[y][x] == "W" or \
-                self.abs_grid[y][x] == "R":
-            return False
+        if x < 0 or x >= self.map.width or y < 0 or y >= self.map.height or self.abs_grid[y][x] != "_": # Move only in the grid and to free cells
+            return 0 # reward = 0 if no move
         self.abs_grid[y][x] = self.abs_grid[yp][xp]
         self.abs_grid[yp][xp] = "_"
         self.agents[agent]["position"] = (x, y)
-        return True
+        return 1 # reward = 1 if move
 
     def _observe_surrounding(self, position, v_range=3):
         cx, cy = position
@@ -117,8 +146,9 @@ class GameState:
                 return 2  # Resource
             else:
                 da = self.agents[cell]["AI"]
+                da: CombatAgent
                 color = da.get_color()
-                r = da.atk_range
+                r = da.get_range()
                 agents_pos.append((x, y))
                 return 3  # Agent
 
@@ -134,6 +164,10 @@ class GameState:
         for (x, y) in map.resources_positions:
             abs_grid[y][x] = "R"
         self.bases = map.agents_bases
+        for a in self.bases.keys():
+            #print(self.bases[a])
+            (x, y) = self.bases[a]["position"]
+            abs_grid[y][x] = a
         return abs_grid
 
     def _observe_surrounding1(self, position, v_range: int, agents_pos: list, resources_pos: list, walls_pos: list):

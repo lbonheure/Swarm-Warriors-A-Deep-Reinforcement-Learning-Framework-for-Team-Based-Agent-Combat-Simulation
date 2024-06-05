@@ -115,11 +115,13 @@ class Grid:
         for a in self.agents.keys():
             self._draw_agent(a, self.agents[a])
 
-    def _draw_agent(self, name, params):
+    def _draw_agent(self, name, agent):
         if self.map is None:
             raise MapIsNoneError
-        (x, y) = params["position"]
-        color = params["AI"].get_color()
+        if agent["hp"] < 0:
+            return
+        (x, y) = agent["position"]
+        color = agent["AI"].get_color()
         w = self.canvas.winfo_width()  # Get current width of canvas
         h = self.canvas.winfo_height()  # Get current height of canvas
         self.canvas.delete(name)
@@ -136,7 +138,6 @@ class Grid:
 
         self.canvas.create_oval(x0, y0, x1, y1, fill=color, outline=color, tags=name)
         self.canvas.update()
-        # print("agent", name, "drawed at position (", x, ",",  y, ") in", color)
 
     def _draw_base(self, name, params):
         if self.map is None:

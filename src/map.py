@@ -1,9 +1,10 @@
 
 import random
 import copy
+import os
 
 MINIMUM_DISTANCE_BASES_RESOURCES = 3
-MINIMUM_DISTANCE_BASES_WALLS = 0
+MINIMUM_DISTANCE_BASES_WALLS = 1
 
 
 class Map:
@@ -20,11 +21,12 @@ class Map:
             num_resource_ores (int, optional): The number of resource ores in the new map. Ignored if random is set to False. Defaults to 2.
             agent_bases (dict, optional): _description_. Defaults to None.
         """
-        self.agents_bases = copy.copy(agent_bases)
+        self.agents_bases = copy.deepcopy(agent_bases)
         self.bases_positions = []
-        for a in agent_bases.keys():
-            pos = agent_bases[a]["position"]
-            self.bases_positions.append(pos)
+        if agent_bases:
+            for a in agent_bases.keys():
+                pos = agent_bases[a]["position"]
+                self.bases_positions.append(pos)
         self.width = width
         self.height = height
         self.random = random
@@ -42,7 +44,7 @@ class Map:
     
     def reset(self, random=False, width=None, height=None, num_walls=None, num_resource_ores=None, agent_bases:dict=None):
         if agent_bases:
-            self.agents_bases = copy.copy(agent_bases)
+            self.agents_bases = copy.deepcopy(agent_bases)
             self.bases_positions.clear()
             for a in agent_bases.keys():
                 pos = agent_bases[a]["position"]
@@ -90,6 +92,20 @@ class Map:
                     file.write("_, ")
             file.write("\n")
         file.close()
+        
+    def load_filename(self, filename):
+        if(os.path.exists(filename)):
+            file = open(filename, "r")
+            self.load(file)
+        else:
+            for dirpath, dirnames, filenames in os.walk("."):
+                if filename in filenames:
+                    p = os.path.join(dirpath, filename)
+                    file = open(p, "r")
+                    self.load(file)
+                    break
+
+
 
 
     def load(self, file):
@@ -100,16 +116,14 @@ class Map:
         x = 0
         for line in file.readlines():
             line:str
-            print(line)
             line = line.strip()
             row = line.split(",")
-            print(row)
             for c in row:
-                if c == "W" or " W":
+                if c == "W" or c == " W" or c == "W ":
                     self.walls_positions.append((x, y))
-                elif c == "R" or " R":
+                elif c == "R" or c == " R" or c == "W ":
                     self.resources_positions.append((x, y))
-                elif c == "B" or " B":
+                elif c == "B" or c == " B" or c == "W ":
                     self.bases_positions.append((x, y))
                 x += 1
             y += 1
@@ -122,10 +136,8 @@ class Map:
         if self.agents_bases:
             if len(self.bases_positions) == len(self.agents_bases.keys()):
                 for i, a in enumerate(self.agents_bases.keys()):
-                    self.agents_bases[a] = self.bases_positions[i]
+                    self.agents_bases[a]["position"] = self.bases_positions[i]
             else:
-                print(self.bases_positions)
-                print(self.agents_bases)
                 raise Wrong_bases_number_error
 
     def _place_resources(self):

@@ -212,51 +212,20 @@ class Agent:
 
 
 class CombatAgent(Agent):
-    def __init__(self, color: str, atk_range: int, atk: int, init_pos=None, id=None) -> None:
-        super().__init__(init_pos)
-        self.alive = True
-        self.hp_max = 1000
-        self.hp = 1000
-        self.atk = atk
+    def __init__(self, color: str, atk_range: int, atk: int) -> None:
+        super().__init__()
         self.color = color
         self.atk_range = atk_range
-
-        self.heal_capacity = random.random()
-        self.damage_capacity = 1 - self.heal_capacity
-
-    def heal(self):
-        return self.heal_capacity * self.atk
-
-    def attack(self):
-        return self.damage_capacity * self.atk
-
-    def receive_damage(self, value):
-        self.hp -= value
-        if self.hp <= 0:
-            self.alive = False
-
-    def receive_heal(self, value):
-        self.hp += value
-        if self.hp >= self.hp_max:
-            self.hp = self.hp_max
-
-    """
-    def color(self):
-        if self.hp > self.hp_max // 2:
-            return "green"
-        elif self.hp > self.hp_max // 4:
-            return "yellow"
-        elif self.hp > 0:
-            return "red"
-        else:
-            return "black"
-    """
+        self.atk = atk
 
     def get_color(self):
         return self.color
 
-    def get_atk_range(self):
+    def get_range(self):
         return self.atk_range
+
+    def get_atk(self):
+        return self.atk
 
 """
 class ResourceAgent(Agent):

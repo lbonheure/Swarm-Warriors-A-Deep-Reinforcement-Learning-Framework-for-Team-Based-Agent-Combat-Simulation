@@ -6,7 +6,7 @@ import time
 from AppView import AppView
 from map import Map
 from gameState import GameState
-from Agent import Agent
+from Agent import (Agent, CombatAgent)
 
 
 class AppController(AppView.Listener):
@@ -16,7 +16,15 @@ class AppController(AppView.Listener):
         self.appView.setListener(self)
 
         # Create the map, the grid and the gameState
-        self.agents = {"agent1": (0, 0, "blue"), "agent2": (19, 19, "green")}
+        # agent: (x, y, hp, decisionAgent)
+        self.decisionAgent_blue_melee = Agent(color="blue", range=1)
+        self.agents = {"agent1": [0, 0, 100, self.decisionAgent_blue_melee], "agent2": (19, 19, "green", True)}
+        """
+        self.agents = {"agent1": CombatAgent((0,0), "blue", output_net=5, range=1),
+                       "agent2": CombatAgent((0,0), "blue", output_net=5, range=2),
+                       "agent3": CombatAgent((0,0), "red", output_net=5, range=1),
+                       "agent4": CombatAgent((0,0), "red", output_net=5, range=2)}
+        """
         self.map = Map(random=True, agent_bases=self.agents)
         self.grid = self.appView.createGrid(self.map)
         self.gameState = GameState(self.map)
@@ -25,9 +33,6 @@ class AppController(AppView.Listener):
         # Simulation parameters
         self.running = False
         self.speed_simu = self.appView.get_speed_simu()
-
-        # init agent
-        self.decision_agent = Agent()
 
     def run(self):
         """Launch the application
@@ -47,15 +52,17 @@ class AppController(AppView.Listener):
         # TODO Init model for training
         
         # TODO train model -> 1 shot ? many times ?
+        train_map = Map()
+        train_map.load("maps/map0.csv")
+        train_gameState = GameState(train_map, self.agents)
+        # train_gameState.set_agents(agents=self.agents)
+
         for i in range(100): # number of move for training
             actions = {}
-            moves = ["N", "S", "O", "E"]
             for a in self.agents:
-                # d = random.choice(moves)
-                print(self.gameState.get_infos(self.agents)[a])
                 d = self.decision_agent.act_best(self.gameState.get_infos(self.agents)[a])
                 print(d)
-                actions[a] = ["Move", d]
+                actions[a] = d
             self.gameState.update_state(actions)
             
         # TODO Prepare model for simu
@@ -65,12 +72,11 @@ class AppController(AppView.Listener):
         """Perform a random movement for all agents. (the movement may fail)
         """
         actions = {}
-        moves = ["N", "S", "O", "E"]
-        agents_info = self.gameState.get_infos(self.agents)
         for a in self.agents:
-            print(a, " ", self.gameState.get_infos(self.agents)[a])
-            d = self.decision_agent.act_train(agents_info[a])
-            actions[a] = ["Move", d]
+            _, _, _, decision_agent = self.agents[a]
+            d = decision_agent.act_best(self.gameState.get_infos(self.agents)[a])
+            print(d)
+            actions[a] = d
         self.gameState.update_state(actions)
         self.grid.update(self.gameState) # Show changes on the graphical interface
 

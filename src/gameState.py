@@ -9,13 +9,13 @@ def sign(x):
 
 
 class GameState:
-    def __init__(self, map: Map=None) -> None:
+    def __init__(self, map: Map=None, agents=None) -> None:
         self.map = map
         self.abs_grid = []
         if self.map:
             self.abs_grid = self._create_abs_grid_from_map(self.map)
         self.bases = None
-        self.agents = None
+        self.agents = agents
         self.infos = {}
         
     def set_map(self, map: Map):
@@ -30,10 +30,14 @@ class GameState:
         self.get_infos(self.agents)
 
     def update_state(self, actions: dict):
-        # template actions: {"agent1":["Move", "E"], "agent2":["Mine"], "agent3":["Move", "N"]}
+        # template actions: {"agent1":"N", "agent2":"A", "agent3":"E"}
+
+        # TODO gestion attaques
+
+
         for a in actions.keys():
-            if actions[a][0] == "Move":
-                d = actions[a][1]
+            if actions[a] != "A":
+                d = actions[a]
                 self._movement(a, d)
         self.get_infos(self.agents)
 
@@ -68,6 +72,8 @@ class GameState:
 
     def _movement(self, agent, direction):
         x, y, c = self.agents[agent]
+        xp = x
+        yp = y
         match direction:
             case "O":
                 x -= 1
@@ -80,6 +86,8 @@ class GameState:
         if x < 0 or x >= self.map.width or y < 0 or y >= self.map.height or self.abs_grid[y][x] == "W" or \
                 self.abs_grid[y][x] == "R":
             return False
+        self.abs_grid[y][x] = self.abs_grid[yp][xp]
+        self.abs_grid[yp][xp] = "_"
         self.agents[agent] = (x, y, c)
         return True
 
@@ -88,23 +96,27 @@ class GameState:
         agents_pos, resources_pos, walls_pos = [], [], []
 
         def get_relevant_positions(distance=3):
-            return [(x_r, y_r) for x_r in range(-distance, distance + 1) for y_r in range(-distance, distance + 1)
-                    if abs(x_r) + abs(y_r) <= distance and (x_r, y_r) != (0, 0)]
+            return [(x, y) for x in range(-distance, distance + 1)
+                    for y in range(-distance, distance + 1)
+                    if abs(x) + abs(y) <= distance and (x, y) != (0, 0)]
 
-        def check_position(x_val, y_val):
-            if x_val < 0 or y_val < 0 or y_val >= len(self.abs_grid) or x_val >= len(self.abs_grid[0]):
+        def check_position(x, y):
+            if x < 0 or y < 0 or y >= len(self.abs_grid) or x >= len(self.abs_grid[0]):
                 return -1  # Outside grid
-            cell = self.abs_grid[y_val][x_val]
+            cell = self.abs_grid[y][x]
             if cell == "_":
                 return 0  # Nothing
             elif cell == "W":
-                walls_pos.append((x_val, y_val))
+                walls_pos.append((x, y))
                 return 1  # Wall
             elif cell == "R":
-                resources_pos.append((x_val, y_val))
+                resources_pos.append((x, y))
                 return 2  # Resource
             else:
-                agents_pos.append((x_val, y_val))
+                da = self.agents[cell][3]
+                color = da.getColor()
+                r = da.getRange()
+                agents_pos.append((x, y))
                 return 3  # Agent
 
         relevant_positions = get_relevant_positions(v_range)

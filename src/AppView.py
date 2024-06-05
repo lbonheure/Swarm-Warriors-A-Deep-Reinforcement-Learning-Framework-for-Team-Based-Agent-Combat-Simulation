@@ -13,6 +13,12 @@ class AppView(tk.Tk):
         def new_map(self):
             pass
         
+        def save_map(self):
+            pass
+        
+        def load_map(self):
+            pass
+        
         def train_model(self):
             pass
 
@@ -41,6 +47,8 @@ class AppView(tk.Tk):
         # self.show_button = tk.Button(self.buttons_frame, text="Show agents", command=self.call_controller_show_agents)
         self.move_button = tk.Button(self.buttons_frame, text="Random Move", command=self._call_controller_random_move)
         self.new_map_button = tk.Button(self.buttons_frame, text="New map", command=self._call_controller_new_map)
+        self.save_map_button = tk.Button(self.buttons_frame, text="Save map", command=self._call_controller_save_map)
+        self.load_map_button = tk.Button(self.buttons_frame, text="Load map", command=self._call_controller_load_map)
         self.train_button = tk.Button(self.buttons_frame, text="Train model", command=self._call_controller_train_model)
         self.run_button = tk.Button(self.buttons_frame, text="Run", command=self._call_controller_run_simu)
         self.stop_button = tk.Button(self.buttons_frame, text="Stop", command=self._call_controller_stop_simu)
@@ -87,9 +95,11 @@ class AppView(tk.Tk):
         """
         # self.hello_label.pack(side="top")
         # self.show_button.pack(side="left", padx=10, pady=5)
-        self.move_button.pack(side="left", padx=10, pady=5)
         self.new_map_button.pack(side="left", padx=10, pady=5)
+        self.save_map_button.pack(side="left", padx=10, pady=5)
+        self.load_map_button.pack(side="left", padx=10, pady=5)
         self.train_button.pack(side="left", padx=10, pady=5)
+        self.move_button.pack(side="left", padx=10, pady=5)
         self.run_button.pack(side="left", padx=10, pady=5)
         self.stop_button.pack(side="left", padx=10, pady=5)
         self.speed_label.pack(side="left", padx=[10, 1], pady=5)
@@ -118,3 +128,9 @@ class AppView(tk.Tk):
         
     def _call_controller_train_model(self):
         self.listener.train_model()
+        
+    def _call_controller_save_map(self):
+        self.listener.save_map()
+        
+    def _call_controller_load_map(self):
+        self.listener.load_map()

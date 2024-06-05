@@ -87,9 +87,9 @@ class Grid:
             self._draw_hexagon(x, y, u_x, u_y)
             
         # Draw bases
-        if self.map.agent_bases:
-            for b in self.map.agent_bases.keys():
-                self._draw_base(b, self.map.agent_bases[b])
+        if self.map.agents_bases:
+            for b in self.map.agents_bases.keys():
+                self._draw_base(b, self.map.agents_bases[b])
 
     def _draw_hexagon(self, x, y, u_x, u_y):
         u = min(u_x, u_y) - 4
@@ -118,7 +118,8 @@ class Grid:
     def _draw_agent(self, name, params):
         if self.map is None:
             raise MapIsNoneError
-        x, y, color = params
+        (x, y) = params["position"]
+        color = params["AI"].color
         w = self.canvas.winfo_width()  # Get current width of canvas
         h = self.canvas.winfo_height()  # Get current height of canvas
         self.canvas.delete(name)
@@ -140,7 +141,8 @@ class Grid:
     def _draw_base(self, name, params):
         if self.map is None:
             raise MapIsNoneError
-        x, y, color = params
+        (x, y) = params["position"]
+        color = params["AI"].color
         w = self.canvas.winfo_width()  # Get current width of canvas
         h = self.canvas.winfo_height()  # Get current height of canvas
         self.canvas.delete("b:" + name)

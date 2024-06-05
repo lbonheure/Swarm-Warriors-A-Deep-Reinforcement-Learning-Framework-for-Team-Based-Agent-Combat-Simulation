@@ -25,7 +25,7 @@ class GameState:
     def set_agents(self, agents: dict):
         self.agents = agents
         for a in agents.keys():
-            x, y, _ = agents[a]
+            (x, y) = agents[a]["position"]
             self.abs_grid[y][x] = a
         self.get_infos(self.agents)
 
@@ -33,7 +33,10 @@ class GameState:
         # template actions: {"agent1":"N", "agent2":"A", "agent3":"E"}
         
         # TODO gestion attaques
-        
+        for a in actions.keys():
+            if actions[a] == "A":
+                pass
+                #self._atk(a)
         
         for a in actions.keys():
             if actions[a] != "A":
@@ -59,7 +62,7 @@ class GameState:
     def get_infos(self, agents: dict):
         self.infos.clear()
         for a in agents.keys():
-            x, y, _ = agents[a]
+            (x, y) = agents[a]["position"]
             #agents_pos = []
             #resources_pos = []
             #walls_pos = []
@@ -71,7 +74,7 @@ class GameState:
         return self.infos
 
     def _movement(self, agent, direction):
-        x, y, c = self.agents[agent]
+        (x, y) = self.agents[agent]["position"]
         xp = x
         yp = y
         match direction:
@@ -88,7 +91,7 @@ class GameState:
             return False
         self.abs_grid[y][x] = self.abs_grid[yp][xp]
         self.abs_grid[yp][xp] = "_"
-        self.agents[agent] = (x, y, c)
+        self.agents[agent]["position"] = (x, y)
         return True
 
     def _observe_surrounding(self, position, v_range=3):
@@ -113,9 +116,9 @@ class GameState:
                 resources_pos.append((x, y))
                 return 2  # Resource
             else:
-                da = self.agents[cell][3]
-                color = da.getColor()
-                r = da.getRange()
+                da = self.agents[cell]["AI"]
+                color = da.color
+                r = da.atk_range
                 agents_pos.append((x, y))
                 return 3  # Agent
 
@@ -130,7 +133,7 @@ class GameState:
             abs_grid[y][x] = "W"
         for (x, y) in map.resources_positions:
             abs_grid[y][x] = "R"
-        self.bases = map.agent_bases
+        self.bases = map.agents_bases
         return abs_grid
 
     def _observe_surrounding1(self, position, v_range: int, agents_pos: list, resources_pos: list, walls_pos: list):

@@ -16,13 +16,17 @@ move_list = ["N", "S", "W", "E", "A"]
 
 
 class Agent:
-    def __init__(self, id=None, init_pos=None, input_size=25, output_size=5,
+    def __init__(self, color: str, atk_range: int, atk: int, init_pos=None, input_size=25, output_size=5,
                  epsilon=0.9,
                  decay=0.9995,
                  gamma=0.9,
                  loss_fct="mse",
                  opt_fct="adam",
                  mem=1000000, metrics=None, epsilon_min=0.1) -> None:
+        
+        self.color = color
+        self.atk_range = atk_range
+        self.atk = atk
 
         # ---- Init Neural networks ----
         tf.keras.utils.disable_interactive_logging()

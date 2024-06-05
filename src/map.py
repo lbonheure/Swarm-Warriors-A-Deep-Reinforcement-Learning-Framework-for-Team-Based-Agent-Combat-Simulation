@@ -9,7 +9,7 @@ MINIMUM_DISTANCE_BASES_WALLS = 0
 class Map:
     """Create and store a game map
     """
-    def __init__(self, random=False, width=20, height=20, num_walls=40, num_resource_ores=2, agent_bases:dict=None) -> None:
+    def __init__(self, random=False, width=20, height=20, num_walls=40, num_resource_ores=0, agent_bases:dict=None) -> None:
         """_summary_
 
         Args:
@@ -20,7 +20,11 @@ class Map:
             num_resource_ores (int, optional): The number of resource ores in the new map. Ignored if random is set to False. Defaults to 2.
             agent_bases (dict, optional): _description_. Defaults to None.
         """
-        self.agent_bases = copy.deepcopy(agent_bases)
+        self.agents_bases = copy.copy(agent_bases)
+        self.bases_positions = []
+        for a in agent_bases.keys():
+            pos = agent_bases[a]["position"]
+            self.bases_positions.append(pos)
         self.width = width
         self.height = height
         self.random = random
@@ -38,7 +42,11 @@ class Map:
     
     def reset(self, random=False, width=None, height=None, num_walls=None, num_resource_ores=None, agent_bases:dict=None):
         if agent_bases:
-            self.agent_bases = copy.deepcopy(agent_bases)
+            self.agents_bases = copy.copy(agent_bases)
+            self.bases_positions.clear()
+            for a in agent_bases.keys():
+                pos = agent_bases[a]["position"]
+                self.bases_positions.append(pos)
         if width:
             self.width = width
         if height:
@@ -67,8 +75,59 @@ class Map:
     def create_random_map(self):
         self._place_resources()
         self._place_walls()
-            
-            
+
+
+    def save(self, file):
+        for y in range(20):
+            for x in range(20):
+                if (x, y) in self.bases_positions:
+                    file.write("B, ")
+                elif (x, y) in self.walls_positions:
+                    file.write("W, ")
+                elif (x, y) in self.resources_positions:
+                    file.write("R, ")
+                else:
+                    file.write("_, ")
+            file.write("\n")
+        file.close()
+
+
+    def load(self, file):
+        self.bases_positions = []
+        self.walls_positions = []
+        self.resources_positions = []
+        y = 0
+        x = 0
+        for line in file.readlines():
+            line:str
+            print(line)
+            line = line.strip()
+            row = line.split(",")
+            print(row)
+            for c in row:
+                if c == "W" or " W":
+                    self.walls_positions.append((x, y))
+                elif c == "R" or " R":
+                    self.resources_positions.append((x, y))
+                elif c == "B" or " B":
+                    self.bases_positions.append((x, y))
+                x += 1
+            y += 1
+            x = 0
+        file.close()
+        self._assign_bases_to_agents()
+
+
+    def _assign_bases_to_agents(self):
+        if self.agents_bases:
+            if len(self.bases_positions) == len(self.agents_bases.keys()):
+                for i, a in enumerate(self.agents_bases.keys()):
+                    self.agents_bases[a] = self.bases_positions[i]
+            else:
+                print(self.bases_positions)
+                print(self.agents_bases)
+                raise Wrong_bases_number_error
+
     def _place_resources(self):
         # 1. Clear previous positions
         self.resources_positions.clear()
@@ -78,10 +137,9 @@ class Map:
         for x in range(self.width):
             for y in range(self.height):
                 valid_pos = True
-                if self.agent_bases:
-                    for b in self.agent_bases.keys():
-                        xb, yb, _, _ = self.agent_bases[b]
-                        if abs(x - xb) < MINIMUM_DISTANCE_BASES_RESOURCES and abs(y - yb) < MINIMUM_DISTANCE_BASES_RESOURCES:
+                if self.bases_positions:
+                    for (xb, yb) in self.bases_positions:
+                        if abs(x - xb) <= MINIMUM_DISTANCE_BASES_RESOURCES and abs(y - yb) <= MINIMUM_DISTANCE_BASES_RESOURCES:
                             valid_pos = False
                 if valid_pos:
                     possible_positions.append((x, y))
@@ -104,10 +162,9 @@ class Map:
         for x in range(self.width):
             for y in range(self.height):
                 valid_pos = True
-                if self.agent_bases:
-                    for b in self.agent_bases.keys():
-                        xb, yb, _, _ = self.agent_bases[b]
-                        if abs(x - xb) < MINIMUM_DISTANCE_BASES_WALLS and abs(y - yb) < MINIMUM_DISTANCE_BASES_WALLS:
+                if self.bases_positions:
+                    for (xb, yb) in self.bases_positions:
+                        if abs(x - xb) <= MINIMUM_DISTANCE_BASES_WALLS and abs(y - yb) <= MINIMUM_DISTANCE_BASES_WALLS:
                             valid_pos = False
                 if (x, y) in self.resources_positions:
                     valid_pos = False
@@ -124,14 +181,14 @@ class Map:
             possible_positions.remove(pos)
         
         # 4. Correct possible errors
-        if self.agent_bases:
+        if self.bases_positions:
             c = 0
             while True:
+                way_exists = True
                 c+= 1
                 if c == 2000: # avoid infinite loop
                     break
-                for b in self.agent_bases.keys():
-                    xb, yb, _, _ = self.agent_bases[b]
+                for (xb, yb) in self.bases_positions:
                     for r_pos in self.resources_positions:
                         way_exists = self._find_way((xb, yb), r_pos, [])
                         if not way_exists:
@@ -181,5 +238,11 @@ class Resources_placement_error(Exception):
 
 class Walls_placement_error(Exception):
     """Error in placement of resources
+    """
+    pass
+
+
+class Wrong_bases_number_error(Exception):
+    """Difference between the number of bases and the number of agents
     """
     pass

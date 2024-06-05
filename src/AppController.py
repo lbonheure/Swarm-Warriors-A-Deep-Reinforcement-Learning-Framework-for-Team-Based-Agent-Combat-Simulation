@@ -1,4 +1,9 @@
 import tkinter as tk
+import tkinter.messagebox as msg
+import os
+from tkinter import filedialog as fd
+
+import copy
 import random
 import threading as thr
 import time
@@ -10,7 +15,6 @@ from Agent import (Agent, CombatAgent)
 
 # For the training
 from tqdm import tqdm
-import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # To disable the spam Warning from TensorFlow
 
 class AppController(AppView.Listener):
@@ -21,16 +25,18 @@ class AppController(AppView.Listener):
 
         # Create the map, the grid and the gameState
         # agent: (x, y, hp, decisionAgent)
-        self.decisionAgent_blue_melee = CombatAgent(color="blue", range=1)
-        self.decisionAgent_green_melee = CombatAgent(color="green", range=1)
-        self.agents = {"agent1": [0, 0, 100, self.decisionAgent_blue_melee],
-                       "agent2": [19, 19, 100, self.decisionAgent_green_melee]}
-        """
-        self.agents = {"agent1": CombatAgent((0,0), "blue", output_net=5, range=1),
-                       "agent2": CombatAgent((0,0), "blue", output_net=5, range=2),
-                       "agent3": CombatAgent((0,0), "red", output_net=5, range=1),
-                       "agent4": CombatAgent((0,0), "red", output_net=5, range=2)}
-        """
+        self.decisionAgent_blue_melee = Agent(color="blue", atk_range=1, atk=10)
+        self.decisionAgent_blue_range = Agent(color="blue", atk_range=2, atk=10)
+        self.decisionAgent_red_melee = Agent(color="red", atk_range=1, atk=10)
+        self.decisionAgent_red_range = Agent(color="red", atk_range=2, atk=10)
+        self.agents = {"agent_b1": {"position":(7, 0), "hp":100, "AI":self.decisionAgent_blue_melee},
+                       "agent_b2": {"position":(12, 0), "hp":100, "AI":self.decisionAgent_blue_melee},
+                       "agent_b3": {"position":(0, 0), "hp":70, "AI":self.decisionAgent_blue_range},
+                       "agent_b4": {"position":(19, 0), "hp":70, "AI":self.decisionAgent_blue_range},
+                       "agent_r1": {"position":(7, 19), "hp":100, "AI":self.decisionAgent_red_melee},
+                       "agent_r2": {"position":(12, 19), "hp":100, "AI":self.decisionAgent_red_melee},
+                       "agent_r3": {"position":(0, 19), "hp":70, "AI":self.decisionAgent_red_range},
+                       "agent_r4": {"position":(19, 19), "hp":70, "AI":self.decisionAgent_red_range}}
         self.map = Map(random=True, agent_bases=self.agents)
         self.grid = self.appView.createGrid(self.map)
         self.gameState = GameState(self.map)
@@ -82,7 +88,9 @@ class AppController(AppView.Listener):
         for i in range(100): # number of move for training
             actions = {}
             for a in self.agents:
-                d = self.decision_agent.act_best(self.gameState.get_infos(self.agents)[a])
+                decision_agent = self.agents[a]["AI"]
+                decision_agent:Agent
+                d = decision_agent.act_train(self.gameState.get_infos(self.agents)[a])
                 print(d)
                 actions[a] = d
             self.gameState.update_state(actions)
@@ -95,7 +103,9 @@ class AppController(AppView.Listener):
         """
         actions = {}
         for a in self.agents:
-            _, _, hp, decision_agent = self.agents[a]
+            decision_agent = self.agents[a]["AI"]
+            hp = self.agents[a]["hp"]
+            decision_agent:Agent
             d = decision_agent.act_best(self.gameState.get_infos(self.agents)[a] + [hp])
             print(d)
             actions[a] = d
@@ -128,3 +138,32 @@ class AppController(AppView.Listener):
         """Stop the simulation
         """
         self.running = False
+
+
+    def save_map(self):
+        if(os.path.exists("./maps")):
+            dir = "./maps"
+        elif(os.path.exists("../maps")):
+            dir = "../maps"
+        else:
+            dir = "."
+        file = fd.asksaveasfile(defaultextension=".csv", initialdir=dir)
+        if file:
+            self.map.save(file)
+
+    def load_map(self):
+        if(os.path.exists("./maps")):
+            dir = "./maps"
+        elif(os.path.exists("../maps")):
+            dir = "../maps"
+        else:
+            dir = "."
+        file = fd.askopenfile(defaultextension=".csv", initialdir=dir)
+        if file:
+            self.map.load(file)
+
+        # Place the agents in their bases on the map
+        if self.map.agents_bases:
+            self.agents = copy.copy(self.map.agents_bases)
+
+        self.grid.set_map(self.map) # Show changes on the graphical interface

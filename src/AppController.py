@@ -13,6 +13,10 @@ from map import Map
 from gameState import GameState
 from Agent import (Agent, CombatAgent)
 
+# For the training
+from tqdm import tqdm
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # To disable the spam Warning from TensorFlow
 
 class AppController(AppView.Listener):
     def __init__(self) -> None:
@@ -61,13 +65,29 @@ class AppController(AppView.Listener):
         # TODO Init model for training
         
         # TODO train model -> 1 shot ? many times ?
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # Disable the spam Warning from TensorFlow
+
+        # Load the map
         train_map = Map()
         train_map.load_filename("map0.csv")
         # Place the agents in their bases on the map
         self._reset_pos_agents()
         train_gameState = GameState(train_map, self.agents)
         # train_gameState.set_agents(agents=self.agents)
-        
+        episodes = 1000
+        for i in tqdm(range(episodes)):
+            done = False
+            step_nbr = 0
+            while not done:
+                # Observe the actual states
+                old_states = train_gameState.get_infos(self.agents)
+
+                agent_actions = []
+                for agent in self.agents:
+                    agent_actions = agent[3].act_train(old_states[agent])
+
+
+
         for i in range(100): # number of move for training
             actions = {}
             for a in self.agents:

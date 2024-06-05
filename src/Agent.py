@@ -16,17 +16,13 @@ move_list = ["N", "S", "W", "E", "A"]
 
 
 class Agent:
-    def __init__(self, color: str, atk_range: int, atk: int, init_pos=None, input_size=25, output_size=5,
+    def __init__(self, init_pos=None, input_size=25, output_size=5,
                  epsilon=0.9,
                  decay=0.9995,
                  gamma=0.9,
                  loss_fct="mse",
                  opt_fct="adam",
                  mem=1000000, metrics=None, epsilon_min=0.1) -> None:
-        
-        self.color = color
-        self.atk_range = atk_range
-        self.atk = atk
 
         # ---- Init Neural networks ----
         tf.keras.utils.disable_interactive_logging()
@@ -216,14 +212,14 @@ class Agent:
 
 
 class CombatAgent(Agent):
-    def __init__(self, color = None, range = 1, id=None, init_pos=None) -> None:
-        super().__init__(id, init_pos)
+    def __init__(self, color: str, atk_range: int, atk: int, init_pos=None, id=None) -> None:
+        super().__init__(init_pos)
         self.alive = True
         self.hp_max = 1000
         self.hp = 1000
-        self.atk = 100
+        self.atk = atk
         self.color = color
-        self.range = range
+        self.atk_range = atk_range
 
         self.heal_capacity = random.random()
         self.damage_capacity = 1 - self.heal_capacity
@@ -259,8 +255,8 @@ class CombatAgent(Agent):
     def get_color(self):
         return self.color
 
-    def get_range(self):
-        return self.range
+    def get_atk_range(self):
+        return self.atk_range
 
 """
 class ResourceAgent(Agent):

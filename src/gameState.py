@@ -117,7 +117,7 @@ class GameState:
                 return 2  # Resource
             else:
                 da = self.agents[cell]["AI"]
-                color = da.color
+                color = da.get_color()
                 r = da.atk_range
                 agents_pos.append((x, y))
                 return 3  # Agent

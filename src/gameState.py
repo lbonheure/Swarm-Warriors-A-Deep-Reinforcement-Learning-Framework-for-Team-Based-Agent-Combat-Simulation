@@ -110,13 +110,13 @@ class GameState:
             case "S":
                 y += 1
         if x < 0 or x >= self.map.width or y < 0 or y >= self.map.height or self.abs_grid[y][x] != "_": # Move only in the grid and to free cells
-            return 0 # reward = 0 if no move
+            return -1 # reward = 0 if no move
         # TODO verifier synchro abs_grid et position agent
         self.abs_grid[yp][xp] = "_"
         self.abs_grid[y][x] = agent
         self.agents[agent]["position"] = (x, y)
         #print("move", agent, "from", (xp, yp), "to", (x, y), "abs_grid value=", self.abs_grid[y][x])
-        return 1 # reward = 1 if move
+        return 0  # reward = 1 if move
 
     def _observe_surrounding(self, position, v_range=3):
         cx, cy = position

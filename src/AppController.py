@@ -164,10 +164,9 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
             #e_time = (time.time_ns() - start) / 1000000
             #print("time for train long memory:", e_time, "ms")
 
-            if step_nbr % 250 == 0:
-                for decision_agent_name, decision_agent in self.decisionAgents.items():
-                    decision_agent: Agent
-                    decision_agent.model.save(f"../weights_rl/{episodes % 100}/{decision_agent_name}_{step_nbr}.h5")
+            for decision_agent_name, decision_agent in self.decisionAgents.items():
+                decision_agent: Agent
+                decision_agent.model.save(f"../weights_rl/{episodes % 100}/{decision_agent_name}.h5")
 
             self._reset_pos_agents()
             train_gameState.set_map(train_map)

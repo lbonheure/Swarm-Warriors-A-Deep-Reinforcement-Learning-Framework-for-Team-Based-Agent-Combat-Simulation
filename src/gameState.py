@@ -44,6 +44,7 @@ class GameState:
                 rewards[a] = [self._movement(a, d) if pos_act == d else 0 for pos_act in move_set]
         for a in actions.keys():  # Attack action of the agent
             if actions[a] == "A":
+                d = actions[a]
                 #rewards[a] = self._atk(self.agents[a])
                 rewards[a] = [self._atk(self.agents[a]) if pos_act == d else 0 for pos_act in move_set]
 

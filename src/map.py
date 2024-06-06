@@ -104,10 +104,8 @@ class Map:
                     file = open(p, "r")
                     self.load(file)
                     break
-
-
-
-
+                
+        
     def load(self, file):
         self.bases_positions = []
         self.walls_positions = []
@@ -119,11 +117,12 @@ class Map:
             line = line.strip()
             row = line.split(",")
             for c in row:
-                if c == "W" or c == " W" or c == "W ":
+                c = c.strip()
+                if c == "W":
                     self.walls_positions.append((x, y))
-                elif c == "R" or c == " R" or c == "W ":
+                elif c == "R":
                     self.resources_positions.append((x, y))
-                elif c == "B" or c == " B" or c == "W ":
+                elif c == "B":
                     self.bases_positions.append((x, y))
                 x += 1
             y += 1

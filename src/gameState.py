@@ -30,54 +30,37 @@ class GameState:
         for a in agents.keys():
             (x, y) = agents[a]["position"]
             self.abs_grid[y][x] = a
-        self.get_infos(self.agents)
+        #self.get_infos(self.agents)
 
     def update_state(self, actions: dict):
         # template actions: {"agent1":"N", "agent2":"A", "agent3":"E"}
-        move_set = ["N", "S", "W", "E"]
+        move_set = ["N", "S", "W", "E", "A"]
         rewards = {}
         for a in actions.keys():  # Movement action of the agent
             if actions[a] != "A" and actions[a] in move_set:
                 d = actions[a]
-                rewards[a] = self._movement(a, d)
-
+                #rewards[a] = [0 for i in range(len(move_set))]
+                #rewards[a][move_set.index(d)] = self._movement(a, d)
+                rewards[a] = [self._movement(a, d) if pos_act == d else 0 for pos_act in move_set]
         for a in actions.keys():  # Attack action of the agent
             if actions[a] == "A":
-                rewards[a] = self._atk(self.agents[a])
+                #rewards[a] = self._atk(self.agents[a])
+                rewards[a] = [self._atk(self.agents[a]) if pos_act == d else 0 for pos_act in move_set]
 
         for a in actions.keys():  # no action -> dead agent
             if actions[a] != "A" and actions[a] not in move_set:
-                rewards[a] = 0
+                rewards[a] = [0 for pos_act in move_set]
 
         self.get_infos(self.agents)
         return rewards
 
-    def allies_around(self, agent):
-        return self.infos[agent]["ally_pos"]
-
-    def mine_around(self, agent):
-        return self.infos[agent]["resource_pos"]
-
-    def is_collision(self, position):
-        x, y = position
-        if self.abs_grid[y][x] == "W":
-            return True
-        return False
-
-    def is_in_his_base(self, agent):
-        return self.agents[agent] == self.bases[agent]
+    #def is_in_his_base(self, agent):
+    #    return self.agents[agent] == self.bases[agent]
 
     def get_infos(self, agents: dict):
         self.infos.clear()
         for a in agents.keys():
             (x, y) = agents[a]["position"]
-            # agents_pos = []
-            # resources_pos = []
-            # walls_pos = []
-            # self._observe_surrounding(position=(x, y), v_range=3, agents_pos=agents_pos, resources_pos=resources_pos,
-            #                           walls_pos=walls_pos)
-
-            # self.infos[a] = {"ally_pos": agents_pos, "resource_pos": resources_pos, "walls_pos": walls_pos}
             self.infos[a] = self._observe_surrounding(position=(x, y), v_range=3)
         return self.infos
 
@@ -102,8 +85,10 @@ class GameState:
                         hit = True
                         if self.agents[target]["AI"].color == da.color:
                             reward -= 10  # -10 points per hit ally
+                        elif self.agents[target]["hp"] <= 0:
+                            reward += 20 # +20 points per killed ennemy
                         else:
-                            reward += 10  # +10 points per hit ennemy
+                            reward += 10 # +10 points per hit ennemy
         if not hit:
             reward -= 1  # -1 point if no hit
         return reward
@@ -121,13 +106,14 @@ class GameState:
                 y -= 1
             case "S":
                 y += 1
-        if x < 0 or x >= self.map.width or y < 0 or y >= self.map.height or self.abs_grid[y][
-            x] != "_":  # Move only in the grid and to free cells
-            return 0  # reward = 0 if no move
-        self.abs_grid[y][x] = self.abs_grid[yp][xp]
+        if x < 0 or x >= self.map.width or y < 0 or y >= self.map.height or self.abs_grid[y][x] != "_": # Move only in the grid and to free cells
+            return 0 # reward = 0 if no move
+        # TODO verifier synchro abs_grid et position agent
         self.abs_grid[yp][xp] = "_"
+        self.abs_grid[y][x] = agent
         self.agents[agent]["position"] = (x, y)
-        return 1  # reward = 1 if move
+        #print("move", agent, "from", (xp, yp), "to", (x, y), "abs_grid value=", self.abs_grid[y][x])
+        return 1 # reward = 1 if move
 
     def _observe_surrounding(self, position, v_range=3):
         cx, cy = position
@@ -178,6 +164,7 @@ class GameState:
         return surrounding_info
 
     def _create_abs_grid_from_map(self, map: Map):
+        #print("create_abs_grid_from_map")
         abs_grid = [["_" for j in range(map.width)] for i in range(map.height)]
         for (x, y) in map.walls_positions:
             abs_grid[y][x] = "W"
@@ -189,126 +176,3 @@ class GameState:
             (x, y) = self.bases[a]["position"]
             abs_grid[y][x] = a
         return abs_grid
-
-    def _observe_surrounding1(self, position, v_range: int, agents_pos: list, resources_pos: list, walls_pos: list):
-        cx, cy = position
-        other_agents = []
-        for i in range(v_range):
-            try:
-                match self.abs_grid[cy][cx + i + 1]:
-                    case "_":
-                        pass  # nothing
-                    case "R":
-                        resources_pos.append((cx + i + 1, cy))
-                    case "W":
-                        walls_pos.append((cx + i + 1, cy))
-                        break
-                    case _:
-                        agents_pos.append((cx + i + 1, cy))
-            except:
-                break
-
-        for i in range(v_range):
-            try:
-                match self.abs_grid[cy][cx - i - 1]:
-                    case "_":
-                        pass  # nothing
-                    case "R":
-                        resources_pos.append((cx - i - 1, cy))
-                    case "W":
-                        walls_pos.append((cx - i - 1, cy))
-                        break
-                    case _:
-                        agents_pos.append((cx - i - 1, cy))
-            except:
-                break
-
-        for i in range(v_range):
-            try:
-                match self.abs_grid[cy + i + 1][cx]:
-                    case "_":
-                        pass  # nothing
-                    case "R":
-                        resources_pos.append((cx, cy + i + 1))
-                    case "W":
-                        walls_pos.append((cx, cy + i + 1))
-                        break
-                    case _:
-                        agents_pos.append((cx, cy + i + 1))
-            except:
-                break
-
-        for i in range(v_range):
-            try:
-                match self.abs_grid[cy - i - 1][cx]:
-                    case "_":
-                        pass  # nothing
-                    case "R":
-                        resources_pos.append((cx, cy - i - 1))
-                    case "W":
-                        walls_pos.append((cx, cy - i - 1))
-                        break
-                    case _:
-                        agents_pos.append((cx, cy - i - 1))
-            except:
-                break
-
-        """
-        for i in range(-v_range, v_range+1):
-            for j in range(-v_range, v_range+1):
-                if cy + i >= len(self.abs_grid) or cy + i < 0 or cx + j >= len(self.abs_grid[0]) or cx + j < 0:
-                    continue
-                match self.abs_grid[cy+i][cx+j]:
-                    case "_":
-                        pass # nothing
-                    case "R":
-                        resources_pos.append((cx+j, cy+i))
-                    case "W":
-                        walls_pos.append((cx+j, cy+i))
-                    case _:
-                        agents_pos.append((cx+j, cy+i))
-                        other_agents.append(self.abs_grid[cy+i][cx+j])
-
-        # Verify that walls don't block the view
-        self._verify_obstacle(position, resources_pos, walls_pos)
-        self._verify_obstacle(position, agents_pos, walls_pos)
-        """
-
-    """ 
-    def _verify_obstacle(self, position, objects: list, walls_pos: list):
-        cx, cy = position
-        for (rx, ry) in objects:
-            if rx == cx: # same vertical line
-                if ry > cy + 1:
-                    for i in range(1, ry-cy):
-                        if (cx, cy+i) in walls_pos:
-                            objects.remove((rx, ry))
-                elif ry < cy - 1:
-                    for i in range(1, cy-ry):
-                        if (cx, cy-i) in walls_pos:
-                            objects.remove((rx, ry))
-            elif ry == cy: # same horizontal line
-                if rx > cx + 1:
-                    for i in range(1, rx-cx):
-                        if (cx+i, cy) in walls_pos:
-                            objects.remove((rx, ry))
-                elif rx < cx - 1:
-                    for i in range(1, cx-rx):
-                        if (cx-1, cy) in walls_pos:
-                            objects.remove((rx, ry))
-            #else:
-            #    inside_trajectory = self._find_trajectory(agent_pos, (rx, ry))
-
-
-    def _find_trajectory(agent_pos, object_pos):
-        cx, cy = agent_pos
-        rx, ry = object_pos
-        trajectory = []
-        dx = rx-cx
-        dy = ry-cx
-        if dx == dy or dx == -dy: # diagonal
-            for i in range(abs(dx)):
-                trajectory.append((cx+i*sign(dx), cy+(i+1)*sign(dy)))
-                trajectory.append((cx+(i+1)*sign(dx), cy+i*sign(dy)))
-                trajectory.append((cx+(i+1)*sign(dx), cy+(i+1)*sign(dy)))
-    """

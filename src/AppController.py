@@ -9,6 +9,7 @@ import threading as thr
 import time
 
 from AppView import AppView
+from progression_bar_view import ProgressBarView
 from map import Map
 from gameState import GameState
 from Agent import (Agent, CombatAgent)
@@ -50,7 +51,10 @@ class AppController(AppView.Listener):
         self.gameState = GameState(self.map)
         self.gameState.set_agents(agents=self.agents)
 
+        self.train_thread = None
+
         # Simulation parameters
+        self.simu_thread = None
         self.running = False
         self.speed_simu = self.appView.get_speed_simu()
 
@@ -69,9 +73,15 @@ class AppController(AppView.Listener):
 
     def train_model(self):
         # TODO interface graphique permetant de visualiser la progression du training
-        # TODO Init model for training
+        pb = ProgressBarView(self.appView)
+        pb.show()
 
-        # TODO train model -> 1 shot ? many times ?
+        if self.train_thread is None or not self.train_thread.is_alive():
+            self.train_thread = thr.Thread(target=self._train_model, name="train_thread", args=[pb])
+            self.train_thread.start()
+
+
+    def _train_model(self, progress_bar):
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Disable the spam Warning from TensorFlow
 
         # Load the map
@@ -126,7 +136,7 @@ class AppController(AppView.Listener):
                         if hp <= 0 or done:
                             end = True
                             agent_status[a] = False
-                            self.agents[a]["AI"]: CombatAgent
+                            #self.agents[a]["AI"]: CombatAgent
                             agent_color = self.agents[a]["AI"].get_color()
                             team_number_alive[agent_color] -= 1
 
@@ -142,6 +152,7 @@ class AppController(AppView.Listener):
 
                 print(step_nbr)
                 step_nbr += 1
+                progress_bar.update_progress(step_nbr) # update progress in progessbar
 
                 for team, count in team_number_alive.items():  # if 1 team is completely dead
                     if count == 0:
@@ -157,8 +168,6 @@ class AppController(AppView.Listener):
 
             self._reset_pos_agents()
 
-        # TODO Prepare model for simu
-        # TODO Reset gameState
 
     def random_move(self):
         """Perform a random movement for all agents. (the movement may fail)
@@ -169,7 +178,7 @@ class AppController(AppView.Listener):
             # hp = self.agents[a]["hp"]
             # decision_agent: Agent
             # d = decision_agent.act_best(self.gameState.get_infos(self.agents)[a] + [hp])
-            d = random.choice(["N", "S", "W", "E"])
+            d = random.choice(["N", "S", "W", "E", "A"])
             actions[a] = d
         self.gameState.update_state(actions)
         self.grid.update(self.gameState)  # Show changes on the graphical interface
@@ -188,10 +197,10 @@ class AppController(AppView.Listener):
     def run_simu(self):
         """Launch the simulation
         """
-        if thr.active_count() < 2:
+        if self.simu_thread is None or not self.simu_thread.is_alive():
             self.running = True
-            simu_thread = thr.Thread(target=self._run_simu, args=[self.speed_simu])
-            simu_thread.start()
+            self.simu_thread = thr.Thread(target=self._run_simu, name="simu_thread", args=[self.speed_simu])
+            self.simu_thread.start()
 
     def _run_simu(self, speed):
         while self.running:

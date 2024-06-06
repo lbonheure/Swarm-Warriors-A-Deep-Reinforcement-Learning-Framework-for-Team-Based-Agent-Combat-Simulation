@@ -118,13 +118,13 @@ class Grid:
     def _draw_agent(self, name, agent):
         if self.map is None:
             raise MapIsNoneError
+        self.canvas.delete(name)
         if agent["hp"] < 0:
             return
         (x, y) = agent["position"]
         color = agent["AI"].get_color()
         w = self.canvas.winfo_width()  # Get current width of canvas
         h = self.canvas.winfo_height()  # Get current height of canvas
-        self.canvas.delete(name)
 
         u_x = w / self.map.width
         u_y = h / self.map.height

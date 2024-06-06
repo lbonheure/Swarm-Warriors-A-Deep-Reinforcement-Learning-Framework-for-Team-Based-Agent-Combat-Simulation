@@ -97,6 +97,7 @@ class GameState:
                             reward -= 10 # -10 points per hit ally
                         else:
                             reward += 10 # +10 points per hit ennemy
+                        # TODO reward + en cas de kill et reward - pour l'agent qui meurt
         if not hit:
             reward -= 1 # -1 point if no hit
         return reward
@@ -108,7 +109,7 @@ class GameState:
         xp = x
         yp = y
         match direction:
-            case "O":
+            case "W":
                 x -= 1
             case "E":
                 x += 1
@@ -118,9 +119,13 @@ class GameState:
                 y += 1
         if x < 0 or x >= self.map.width or y < 0 or y >= self.map.height or self.abs_grid[y][x] != "_": # Move only in the grid and to free cells
             return 0 # reward = 0 if no move
-        self.abs_grid[y][x] = self.abs_grid[yp][xp]
+        # TODO verifier synchro abs_grid et position agent
+        self.abs_grid[y][x] = agent
         self.abs_grid[yp][xp] = "_"
         self.agents[agent]["position"] = (x, y)
+        for i in range(self.map.height):
+            print(self.abs_grid[i])
+        print()
         return 1 # reward = 1 if move
 
     def _observe_surrounding(self, position, v_range=3):

@@ -234,13 +234,33 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
             self.simu_thread = thr.Thread(target=self._run_trained_simu, name="simu_thread", args=[self.speed_simu], daemon=True)
             self.simu_thread.start()
 
-    def _run_random_simu(self, speed):
+    def _run_random_simu(self, speed):                
         while self.running:
+            team_color = {}
+            for a in self.agents.keys():
+                if self.agents[a]["hp"] > 0:
+                    color = self.agents[a]["AI"].color
+                    team_color[color] = True
+            if len(team_color.keys()) < 2:
+                # Only 1 team is left
+                self.running = False
+                break
+                    
             self.random_move()
             time.sleep(1 / speed.get())
             
-    def _run_trained_simu(self, speed):
+    def _run_trained_simu(self, speed):                    
         while self.running:
+            team_color = {}
+            for a in self.agents.keys():
+                if self.agents[a]["hp"] > 0:
+                    color = self.agents[a]["AI"].color
+                    team_color[color] = True
+            if len(team_color.keys()) < 2:
+                # Only 1 team is left
+                self.running = False
+                break
+                
             self.trained_move()
             time.sleep(1 / speed.get())
 
@@ -283,3 +303,8 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         for a in self.agents.keys():
             self.agents[a]["position"] = self.map.agents_bases[a]["position"]
             self.agents[a]["hp"] = self.agents[a]["hpMax"]
+            
+    def reset(self):
+        self._reset_pos_agents()
+        self.gameState.set_map(self.map)
+        self.grid.update(self.gameState)

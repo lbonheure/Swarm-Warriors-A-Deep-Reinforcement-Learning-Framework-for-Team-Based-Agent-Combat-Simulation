@@ -37,15 +37,12 @@ class GameState:
         move_set = ["N", "S", "W", "E", "A"]
         rewards = {}
         for a in actions.keys():  # Movement action of the agent
-            if actions[a] != "A" and actions[a] in move_set:
+            if actions[a] != "A" and actions[a] in move_set and self.agents[a]["hp"] > 0:
                 d = actions[a]
-                #rewards[a] = [0 for i in range(len(move_set))]
-                #rewards[a][move_set.index(d)] = self._movement(a, d)
                 rewards[a] = [self._movement(a, d) if pos_act == d else 0 for pos_act in move_set]
                 
         for a in actions.keys():  # Attack action of the agent
-            if actions[a] == "A":
-                #rewards[a] = self._atk(self.agents[a])
+            if actions[a] == "A" and self.agents[a]["hp"] > 0:
                 d = actions[a]
                 rewards[a] = [self._atk(self.agents[a]) if pos_act == d else 0 for pos_act in move_set]
 
@@ -53,7 +50,7 @@ class GameState:
             if actions[a] != "A" and actions[a] not in move_set:
                 rewards[a] = [0 for pos_act in move_set]
 
-        self.get_infos(self.agents)
+        #self.get_infos(self.agents)
         return rewards
 
     #def is_in_his_base(self, agent):

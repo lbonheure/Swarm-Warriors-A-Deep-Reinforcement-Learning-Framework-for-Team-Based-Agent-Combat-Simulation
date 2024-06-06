@@ -77,8 +77,8 @@ class Map:
     def create_random_map(self):
         self._place_resources()
         self._place_walls()
-        
-    
+
+
     def save(self, file):
         for y in range(20):
             for x in range(20):
@@ -129,8 +129,8 @@ class Map:
             x = 0
         file.close()
         self._assign_bases_to_agents()
-        
-    
+
+
     def _assign_bases_to_agents(self):
         if self.agents_bases:
             if len(self.bases_positions) == len(self.agents_bases.keys()):

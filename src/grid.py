@@ -121,7 +121,7 @@ class Grid:
         if agent["hp"] < 0:
             return
         (x, y) = agent["position"]
-        color = agent["AI"].color
+        color = agent["AI"].get_color()
         w = self.canvas.winfo_width()  # Get current width of canvas
         h = self.canvas.winfo_height()  # Get current height of canvas
         self.canvas.delete(name)
@@ -143,7 +143,7 @@ class Grid:
         if self.map is None:
             raise MapIsNoneError
         (x, y) = params["position"]
-        color = params["AI"].color
+        color = params["AI"].get_color()
         w = self.canvas.winfo_width()  # Get current width of canvas
         h = self.canvas.winfo_height()  # Get current height of canvas
         self.canvas.delete("b:" + name)

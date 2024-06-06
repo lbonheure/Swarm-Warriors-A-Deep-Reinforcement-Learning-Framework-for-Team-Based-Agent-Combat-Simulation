@@ -217,13 +217,13 @@ class CombatAgent(Agent):
         self.color = color
         self.atk_range = atk_range
         self.atk = atk
-        
+
     def get_color(self):
         return self.color
-    
+
     def get_range(self):
         return self.atk_range
-    
+
     def get_atk(self):
         return self.atk
 

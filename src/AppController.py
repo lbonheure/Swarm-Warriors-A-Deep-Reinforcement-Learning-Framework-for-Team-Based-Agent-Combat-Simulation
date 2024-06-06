@@ -85,8 +85,19 @@ class AppController(AppView.Listener):
         for i in tqdm(range(episodes)):
             done = False
             step_nbr = 0
+
+            team_number_alive = {}
+            # Iterate over all agents
+            for agent_info in self.agents.values():
+                team_color = agent_info["AI"].get_color()
+                if team_color not in team_number_alive:
+                    team_number_alive[team_color] = 1
+                else:
+                    team_number_alive[team_color] += 1
+
+            agent_status = {agent_id: True for agent_id, agent_info in self.agents.items()}
             while not done:
-                if step_nbr == 1000:
+                if step_nbr == 500:
                     done = True
 
                 # Observe the actual states
@@ -101,26 +112,40 @@ class AppController(AppView.Listener):
                         old_states[a] = old_states[a] + [hp]
                         d = decision_agent.act_train(old_states[a])
                         actions[a] = d
+                    else:
+                        actions[a] = 0
 
-                rewards = self.gameState.update_state(actions)
+                rewards = train_gameState.update_state(actions)
 
                 new_states = train_gameState.get_infos(self.agents)
 
                 for a in self.agents:
-                    end = False
-                    hp = self.agents[a]["hp"]
-                    if hp <= 0 or done:
-                        end = True
-                    decision_agent = self.agents[a]["AI"]
-                    new_states[a] = new_states[a]+[hp]
-                    # Train the agent over this single step
-                    print(old_states[a], rewards[a], new_states[a], end)
-                    decision_agent.training_montage(old_states[a], rewards[a], new_states[a], end)
+                    if agent_status[a]:
+                        end = False
+                        hp = self.agents[a]["hp"]
+                        if hp <= 0 or done:
+                            end = True
+                            agent_status[a] = False
+                            self.agents[a]["AI"]: CombatAgent
+                            agent_color = self.agents[a]["AI"].get_color()
+                            team_number_alive[agent_color] -= 1
 
-                    # Remember this action and its consequence for later
-                    decision_agent.fill_memory(old_states[a], rewards[a], new_states[a], end)
+                        decision_agent = self.agents[a]["AI"]
+                        new_states[a] = new_states[a] + [hp]
+                        # Train the agent over this single step
+                        decision_agent.training_montage(old_states[a], rewards[a], new_states[a], end)
 
+                        # Remember this action and its consequence for later
+                        decision_agent.fill_memory(old_states[a], rewards[a], new_states[a], end)
+                    else:
+                        new_states[a] = 0
+
+                print(step_nbr)
                 step_nbr += 1
+
+                for team, count in team_number_alive.items():  # if 1 team is completely dead
+                    if count == 0:
+                        done = True
 
             for a in self.agents:
                 decision_agent = self.agents[a]["AI"]
@@ -142,10 +167,11 @@ class AppController(AppView.Listener):
         """
         actions = {}
         for a in self.agents:
-            decision_agent = self.agents[a]["AI"]
-            hp = self.agents[a]["hp"]
-            decision_agent: Agent
-            d = decision_agent.act_best(self.gameState.get_infos(self.agents)[a] + [hp])
+            # decision_agent = self.agents[a]["AI"]
+            # hp = self.agents[a]["hp"]
+            # decision_agent: Agent
+            # d = decision_agent.act_best(self.gameState.get_infos(self.agents)[a] + [hp])
+            d = random.choice(["N", "S", "W", "E"])
             actions[a] = d
         self.gameState.update_state(actions)
         self.grid.update(self.gameState)  # Show changes on the graphical interface

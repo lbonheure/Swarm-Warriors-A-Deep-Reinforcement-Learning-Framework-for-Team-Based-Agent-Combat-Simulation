@@ -92,7 +92,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         self._reset_pos_agents()
         train_gameState = GameState(train_map, self.agents)
         # train_gameState.set_agents(agents=self.agents)
-        episodes = 100
+        episodes = 200
         list_old_states = {a:[] for a in self.agents.keys()}
         list_rewards = {a:[] for a in self.agents.keys()}
         list_new_states = {a:[] for a in self.agents.keys()}
@@ -187,11 +187,9 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
             #e_time = (time.time_ns() - start) / 1000000
             #print("time for train long memory:", e_time, "ms")
 
-
-            if step_nbr % 512 == 0:
-                for decision_agent_name, decision_agent in self.decisionAgents.items():
-                    decision_agent: Agent
-                    decision_agent.save(f"../weights_rl/temp/{decision_agent_name}.h5")
+            for decision_agent_name, decision_agent in self.decisionAgents.items():
+                decision_agent: Agent
+                decision_agent.save(f"../weights_rl/temp/{decision_agent_name}.h5")
 
 
             self._reset_pos_agents()

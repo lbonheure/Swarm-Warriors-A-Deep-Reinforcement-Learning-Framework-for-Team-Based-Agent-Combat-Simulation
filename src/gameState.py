@@ -83,9 +83,10 @@ class GameState:
                         hit = True
                         if self.agents[target]["AI"].color == da.color:
                             reward -= 10  # -10 points per hit ally
+                        elif self.agents[target]["hp"] <= 0:
+                            reward += 20 # +20 points per killed ennemy
                         else:
                             reward += 10 # +10 points per hit ennemy
-                        # TODO reward + en cas de kill et reward - pour l'agent qui meurt
         if not hit:
             reward -= 1  # -1 point if no hit
         return reward
@@ -161,7 +162,7 @@ class GameState:
         return surrounding_info
 
     def _create_abs_grid_from_map(self, map: Map):
-        print("create_abs_grid_from_map")
+        #print("create_abs_grid_from_map")
         abs_grid = [["_" for j in range(map.width)] for i in range(map.height)]
         for (x, y) in map.walls_positions:
             abs_grid[y][x] = "W"

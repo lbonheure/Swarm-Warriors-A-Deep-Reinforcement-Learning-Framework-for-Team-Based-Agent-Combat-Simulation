@@ -147,9 +147,7 @@ class AppController(AppView.Listener):
                     if count == 0:
                         done = True
 
-            for a in self.agents:
-                decision_agent = self.agents[a]["AI"]
-                decision_agent: Agent
+            for decision_agent_name, decision_agent in self.decisionAgents.items():
                 decision_agent.train_long_memory()
 
             if step_nbr % 500 == 0:

@@ -77,7 +77,7 @@ class AppController(AppView.Listener):
         pb.show()
 
         if self.train_thread is None or not self.train_thread.is_alive():
-            self.train_thread = thr.Thread(target=self._train_model, name="train_thread", args=[pb])
+            self.train_thread = thr.Thread(target=self._train_model, name="train_thread", args=[pb], daemon=True)
             self.train_thread.start()
 
 
@@ -199,7 +199,7 @@ class AppController(AppView.Listener):
         """
         if self.simu_thread is None or not self.simu_thread.is_alive():
             self.running = True
-            self.simu_thread = thr.Thread(target=self._run_simu, name="simu_thread", args=[self.speed_simu])
+            self.simu_thread = thr.Thread(target=self._run_simu, name="simu_thread", args=[self.speed_simu], daemon=True)
             self.simu_thread.start()
 
     def _run_simu(self, speed):

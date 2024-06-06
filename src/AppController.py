@@ -9,6 +9,7 @@ import threading as thr
 import time
 
 from AppView import AppView
+from progression_bar_view import ProgressBarView
 from map import Map
 from gameState import GameState
 from Agent import (Agent, CombatAgent)
@@ -69,6 +70,10 @@ class AppController(AppView.Listener):
 
     def train_model(self):
         # TODO interface graphique permetant de visualiser la progression du training
+        progress = tk.IntVar(self.appView, 0)
+        pb = ProgressBarView(self.appView, progress)
+        pb.show()
+        
         # TODO Init model for training
 
         # TODO train model -> 1 shot ? many times ?
@@ -102,7 +107,7 @@ class AppController(AppView.Listener):
                         d = decision_agent.act_train(old_states[a])
                         actions[a] = d
 
-                rewards = self.gameState.update_state(actions)
+                rewards = train_gameState.update_state(actions)
 
                 new_states = train_gameState.get_infos(self.agents)
 
@@ -133,6 +138,8 @@ class AppController(AppView.Listener):
                     decision_agent.model.save(f"../weights_rl/{decision_agent_name}.h5")
 
             self._reset_pos_agents()
+            
+            progress.set(i+1) # update progress in progessbar
 
         # TODO Prepare model for simu
         # TODO Reset gameState

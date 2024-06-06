@@ -98,7 +98,7 @@ class Map:
             file = open(filename, "r")
             self.load(file)
         else:
-            for dirpath, dirnames, filenames in os.walk("."):
+            for dirpath, dirnames, filenames in os.walk(".."):
                 if filename in filenames:
                     p = os.path.join(dirpath, filename)
                     file = open(p, "r")
@@ -129,6 +129,7 @@ class Map:
             x = 0
         file.close()
         self._assign_bases_to_agents()
+        print("map loaded")
 
 
     def _assign_bases_to_agents(self):

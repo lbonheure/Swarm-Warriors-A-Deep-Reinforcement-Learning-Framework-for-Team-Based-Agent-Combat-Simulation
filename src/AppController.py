@@ -10,6 +10,7 @@ import time
 
 from AppView import AppView
 from progression_bar_view import ProgressBarView
+from simuChoiceView import SimuChoiceView
 from map import Map
 from gameState import GameState
 from Agent import (Agent, CombatAgent)
@@ -21,7 +22,7 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # To disable the spam Warning from TensorFlow
 
 
-class AppController(AppView.Listener):
+class AppController(AppView.Listener, SimuChoiceView.Listener):
     def __init__(self) -> None:
         # Create the view
         self.appView = AppView()
@@ -36,8 +37,7 @@ class AppController(AppView.Listener):
         self.decisionAgents = {"decisionAgent_blue_melee": self.decisionAgent_blue_melee,
                                "decisionAgent_blue_range": self.decisionAgent_blue_range,
                                "decisionAgent_red_melee": self.decisionAgent_red_melee,
-                               "decisionAgent_red_range": self.decisionAgent_red_range
-                               }
+                               "decisionAgent_red_range": self.decisionAgent_red_range}
         self.agents = {"agent_b1": {"position": (0, 0), "hp": 70, "hpMax": 70, "AI": self.decisionAgent_blue_range},
                        "agent_b2": {"position": (7, 0), "hp": 100, "hpMax": 100, "AI": self.decisionAgent_blue_melee},
                        "agent_b3": {"position": (12, 0), "hp": 100, "hpMax": 100, "AI": self.decisionAgent_blue_melee},
@@ -87,11 +87,12 @@ class AppController(AppView.Listener):
         # Load the map
         train_map = Map(agent_bases=self.agents)
         train_map.load_filename("map0.csv")
+        self.grid.set_map(train_map)
         # Place the agents in their bases on the map
         self._reset_pos_agents()
         train_gameState = GameState(train_map, self.agents)
         # train_gameState.set_agents(agents=self.agents)
-        episodes = 500
+        episodes = 100
         for i in tqdm(range(episodes)):
             done = False
             step_nbr = 0
@@ -126,6 +127,7 @@ class AppController(AppView.Listener):
                         actions[a] = 0
 
                 rewards = train_gameState.update_state(actions)
+                self.grid.update(train_gameState)
 
                 new_states = train_gameState.get_infos(self.agents)
 
@@ -156,8 +158,11 @@ class AppController(AppView.Listener):
                     if count == 0:
                         done = True
 
+            #start = time.time_ns()
             for decision_agent_name, decision_agent in self.decisionAgents.items():
                 decision_agent.train_long_memory()
+            #e_time = (time.time_ns() - start) / 1000000
+            #print("time for train long memory:", e_time, "ms")
 
             if step_nbr % 250 == 0:
                 for decision_agent_name, decision_agent in self.decisionAgents.items():
@@ -174,11 +179,18 @@ class AppController(AppView.Listener):
         """
         actions = {}
         for a in self.agents:
-            # decision_agent = self.agents[a]["AI"]
-            # hp = self.agents[a]["hp"]
-            # decision_agent: Agent
-            # d = decision_agent.act_best(self.gameState.get_infos(self.agents)[a] + [hp])
             d = random.choice(["N", "S", "W", "E", "A"])
+            actions[a] = d
+        self.gameState.update_state(actions)
+        self.grid.update(self.gameState)  # Show changes on the graphical interface
+
+    def trained_move(self):
+        actions = {}
+        for a in self.agents:
+            decision_agent = self.agents[a]["AI"]
+            hp = self.agents[a]["hp"]
+            decision_agent: Agent
+            d = decision_agent.act_best(self.gameState.get_infos(self.agents)[a] + [hp])
             actions[a] = d
         self.gameState.update_state(actions)
         self.grid.update(self.gameState)  # Show changes on the graphical interface
@@ -197,14 +209,53 @@ class AppController(AppView.Listener):
     def run_simu(self):
         """Launch the simulation
         """
+        choice = SimuChoiceView(self.appView)
+        choice.set_listener(self)
+        choice.show()
+
+    def run_random_simu(self):
         if self.simu_thread is None or not self.simu_thread.is_alive():
             self.running = True
-            self.simu_thread = thr.Thread(target=self._run_simu, name="simu_thread", args=[self.speed_simu], daemon=True)
+            self.simu_thread = thr.Thread(target=self._run_random_simu, name="simu_thread", args=[self.speed_simu], daemon=True)
             self.simu_thread.start()
 
-    def _run_simu(self, speed):
+    def run_trained_simu(self):
+        for decision_agent_name, decision_agent in self.decisionAgents.items():
+            decision_agent: Agent
+            decision_agent.load(f"../weights_rl/{decision_agent_name}.h5")
+        if self.simu_thread is None or not self.simu_thread.is_alive():
+            self.running = True
+            self.simu_thread = thr.Thread(target=self._run_trained_simu, name="simu_thread", args=[self.speed_simu], daemon=True)
+            self.simu_thread.start()
+
+    def _run_random_simu(self, speed):
         while self.running:
+            team_color = {}
+            for a in self.agents.keys():
+                if self.agents[a]["hp"] > 0:
+                    color = self.agents[a]["AI"].color
+                    team_color[color] = True
+            if len(team_color.keys()) < 2:
+                # Only 1 team is left
+                self.running = False
+                break
+
             self.random_move()
+            time.sleep(1 / speed.get())
+
+    def _run_trained_simu(self, speed):
+        while self.running:
+            team_color = {}
+            for a in self.agents.keys():
+                if self.agents[a]["hp"] > 0:
+                    color = self.agents[a]["AI"].color
+                    team_color[color] = True
+            if len(team_color.keys()) < 2:
+                # Only 1 team is left
+                self.running = False
+                break
+
+            self.trained_move()
             time.sleep(1 / speed.get())
 
     def stop_simu(self):
@@ -246,3 +297,8 @@ class AppController(AppView.Listener):
         for a in self.agents.keys():
             self.agents[a]["position"] = self.map.agents_bases[a]["position"]
             self.agents[a]["hp"] = self.agents[a]["hpMax"]
+
+    def reset(self):
+        self._reset_pos_agents()
+        self.gameState.set_map(self.map)
+        self.grid.update(self.gameState)

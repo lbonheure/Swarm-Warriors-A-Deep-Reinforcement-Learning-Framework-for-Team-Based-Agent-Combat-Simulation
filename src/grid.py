@@ -119,7 +119,7 @@ class Grid:
         if self.map is None:
             raise MapIsNoneError
         self.canvas.delete(name)
-        if agent["hp"] < 0:
+        if agent["hp"] <= 0:
             return
         (x, y) = agent["position"]
         color = agent["AI"].get_color()

@@ -30,6 +30,9 @@ class AppView(tk.Tk):
 
         def modify_speed(self, value):
             pass
+        
+        def reset(self):
+            pass
 
     def __init__(self, screenName: str | None = None, baseName: str | None = None, className: str = "Tk",
                  useTk: bool = True, sync: bool = False, use: str | None = None) -> None:
@@ -55,6 +58,7 @@ class AppView(tk.Tk):
         self.speed_label = tk.Label(self.buttons_frame, text="Speed:")
         self.speed_var = tk.IntVar(self.buttons_frame, value=5)
         self.speed_cursor = tk.Scale(self.buttons_frame, from_=1, to=10, orient=tk.HORIZONTAL, variable=self.speed_var)
+        self.reset_button = tk.Button(self.buttons_frame, text="Reset", command=self._call_controller_reset)
 
         # Other attributes
         self.grid = None
@@ -104,6 +108,7 @@ class AppView(tk.Tk):
         self.stop_button.pack(side="left", padx=10, pady=5)
         self.speed_label.pack(side="left", padx=[10, 1], pady=5)
         self.speed_cursor.pack(side="left", padx=[1, 10], pady=5)
+        self.reset_button.pack(side="left", padx=10, pady=5)
         self.buttons_frame.pack(side="top")
         self.grid.show()
 
@@ -134,3 +139,6 @@ class AppView(tk.Tk):
         
     def _call_controller_load_map(self):
         self.listener.load_map()
+        
+    def _call_controller_reset(self):
+        self.listener.reset()

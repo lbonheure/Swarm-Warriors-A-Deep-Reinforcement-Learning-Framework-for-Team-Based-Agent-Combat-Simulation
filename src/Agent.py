@@ -1,6 +1,7 @@
 import random
 from collections import deque
 import math
+import time
 
 import numpy as np
 import tensorflow as tf
@@ -43,6 +44,7 @@ class Agent:
         # Structure of NN
         self.model = tf.keras.models.Sequential()
         self.model.add(tf.keras.layers.Dense(64, activation="relu", input_shape=(input_size,)))
+        #self.model.add(tf.keras.layers.Dense(64, activation="relu"))
         # self.model.add(tf.keras.layers.Dense(64, activation="relu"))
         self.model.add(tf.keras.layers.Dense(64, activation="relu"))
         self.model.add(tf.keras.layers.Dense(32, activation="relu"))
@@ -111,9 +113,11 @@ class Agent:
         dataset = tf.convert_to_tensor(dataset)
         target = tf.convert_to_tensor(target)
 
+        #start = time.time_ns()
         self.model.train_on_batch(
             dataset, target
         )
+        #print("time train on batch", (time.time_ns() - start)/1000000, "ms")
 
     def act_train(self, state):
         """

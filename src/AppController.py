@@ -150,7 +150,6 @@ class AppController(AppView.Listener):
                     else:
                         new_states[a] = 0
 
-                print(step_nbr)
                 step_nbr += 1
                 progress_bar.update_progress(step_nbr) # update progress in progessbar
 

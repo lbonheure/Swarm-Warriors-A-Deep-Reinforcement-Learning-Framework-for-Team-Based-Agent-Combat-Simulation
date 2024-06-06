@@ -87,6 +87,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         # Load the map
         train_map = Map(agent_bases=self.agents)
         train_map.load_filename("map0.csv")
+        self.grid.set_map(train_map)
         # Place the agents in their bases on the map
         self._reset_pos_agents()
         train_gameState = GameState(train_map, self.agents)
@@ -126,6 +127,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
                         actions[a] = 0
                 
                 rewards = train_gameState.update_state(actions)
+                self.grid.update(train_gameState)
 
                 new_states = train_gameState.get_infos(self.agents)
 
@@ -226,9 +228,9 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
             self.simu_thread.start()
             
     def run_trained_simu(self):
-        #for decision_agent_name, decision_agent in self.decisionAgents.items():
-        #    decision_agent: Agent
-        #    decision_agent.load(f"../weights_rl/{decision_agent_name}.h5")
+        for decision_agent_name, decision_agent in self.decisionAgents.items():
+            decision_agent: Agent
+            decision_agent.load(f"../weights_rl/{decision_agent_name}.h5")
         if self.simu_thread is None or not self.simu_thread.is_alive():
             self.running = True
             self.simu_thread = thr.Thread(target=self._run_trained_simu, name="simu_thread", args=[self.speed_simu], daemon=True)

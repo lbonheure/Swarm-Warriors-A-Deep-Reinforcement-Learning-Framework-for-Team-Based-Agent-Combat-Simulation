@@ -86,9 +86,16 @@ class Agent:
         :param done: Boolean about the state of the game (True when game finished)
         :return: None
         """
+        #print("state=", state)
+        #print("reward=", reward)
+        #print("done", done)
+        #print(len(state))
+        #print(len(done))
         state = tf.convert_to_tensor(state, dtype=tf.float32)
         reward = tf.convert_to_tensor(reward, dtype=tf.float32)
         next_state = tf.convert_to_tensor(next_state, dtype=tf.float32)
+        #print("state tensor=", state)
+        
 
         if len(state.shape) == 1:
             state = tf.expand_dims(state, 0)

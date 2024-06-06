@@ -93,6 +93,10 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         train_gameState = GameState(train_map, self.agents)
         # train_gameState.set_agents(agents=self.agents)
         episodes = 100
+        list_old_states = {a:[] for a in self.agents.keys()}
+        list_rewards = {a:[] for a in self.agents.keys()}
+        list_new_states = {a:[] for a in self.agents.keys()}
+        list_end = {a:[] for a in self.agents.keys()}
         for i in tqdm(range(episodes)):
             done = False
             step_nbr = 0
@@ -108,7 +112,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
 
             agent_status = {agent_id: True for agent_id, agent_info in self.agents.items()}
             while not done:
-                if step_nbr == 500:
+                if step_nbr == 512:
                     done = True
 
                 # Observe the actual states
@@ -126,7 +130,9 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
                     else:
                         actions[a] = 0
                 
+                #print("nb agents actions =", len(actions.keys()))
                 rewards = train_gameState.update_state(actions)
+                #print("nb agents rewards =", len(rewards.keys()))
                 self.grid.update(train_gameState)
 
                 new_states = train_gameState.get_infos(self.agents)
@@ -145,12 +151,25 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
                         decision_agent = self.agents[a]["AI"]
                         new_states[a] = new_states[a] + [hp]
                         # Train the agent over this single step
-                        decision_agent.training_montage(old_states[a], rewards[a], new_states[a], end)
-
+                        #decision_agent.training_montage(old_states[a], rewards[a], new_states[a], end)
                         # Remember this action and its consequence for later
                         decision_agent.fill_memory(old_states[a], rewards[a], new_states[a], end)
+                        
+                    if (step_nbr % 64 == 0 and step_nbr !=0) or end:
+                        print(step_nbr)
+                        # training step
+                        #print(len(list_old_states))
+                        decision_agent.training_montage(tuple(list_old_states[a]), tuple(list_rewards[a]), tuple(list_new_states[a]), tuple(list_end[a]))
+                        list_old_states[a].clear()
+                        list_rewards[a].clear()
+                        list_new_states[a].clear()
+                        list_end[a].clear()
                     else:
-                        new_states[a] = 0
+                        list_old_states[a].append(old_states[a])
+                        #print(rewards.keys())
+                        list_rewards[a].append(rewards[a])
+                        list_new_states[a].append(new_states[a])
+                        list_end[a].append(end)
 
                 #print(step_nbr)
                 step_nbr += 1
@@ -187,7 +206,10 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         """
         actions = {}
         for a in self.agents:
-            d = random.choice(["N", "S", "W", "E", "A"])
+            if self.agents[a]["hp"] <= 0:
+                d = 0
+            else:
+                d = random.choice(["N", "S", "W", "E", "A"])
             actions[a] = d
         self.gameState.update_state(actions)
         self.grid.update(self.gameState)  # Show changes on the graphical interface
@@ -197,8 +219,11 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         for a in self.agents:
             decision_agent = self.agents[a]["AI"]
             hp = self.agents[a]["hp"]
-            decision_agent: Agent
-            d = decision_agent.act_best(self.gameState.get_infos(self.agents)[a] + [hp])
+            if hp <= 0:
+                d = 0
+            else:
+                decision_agent: Agent
+                d = decision_agent.act_best(self.gameState.get_infos(self.agents)[a] + [hp])
             actions[a] = d
         self.gameState.update_state(actions)
         self.grid.update(self.gameState)  # Show changes on the graphical interface
@@ -230,7 +255,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
     def run_trained_simu(self):
         for decision_agent_name, decision_agent in self.decisionAgents.items():
             decision_agent: Agent
-            decision_agent.load(f"../weights_rl/{decision_agent_name}.h5")
+            decision_agent.load(f"../weights_rl/{decision_agent_name}_501.h5")
         if self.simu_thread is None or not self.simu_thread.is_alive():
             self.running = True
             self.simu_thread = thr.Thread(target=self._run_trained_simu, name="simu_thread", args=[self.speed_simu], daemon=True)

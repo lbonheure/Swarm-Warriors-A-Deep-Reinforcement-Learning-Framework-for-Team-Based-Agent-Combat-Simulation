@@ -92,7 +92,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         self._reset_pos_agents()
         train_gameState = GameState(train_map, self.agents)
         # train_gameState.set_agents(agents=self.agents)
-        episodes = 100
+        episodes = 500
         list_old_states = {a:[] for a in self.agents.keys()}
         list_rewards = {a:[] for a in self.agents.keys()}
         list_new_states = {a:[] for a in self.agents.keys()}
@@ -155,7 +155,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
                         # Remember this action and its consequence for later
                         decision_agent.fill_memory(old_states[a], rewards[a], new_states[a], end)
 
-                    if (step_nbr % 64 == 0 and step_nbr !=0) or end:
+                    if (step_nbr % 64 == 0 and step_nbr !=0) or done:
                         print(step_nbr)
                         # training step
                         #print(len(list_old_states))
@@ -184,18 +184,18 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
             #e_time = (time.time_ns() - start) / 1000000
             #print("time for train long memory:", e_time, "ms")
 
-            for decision_agent_name, decision_agent in self.decisionAgents.items():
-                decision_agent: Agent
-                decision_agent.model.save(f"../weights_rl/{episodes % 100}/{decision_agent_name}.h5")
+            # for decision_agent_name, decision_agent in self.decisionAgents.items():
+            #     decision_agent: Agent
+            #     decision_agent.model.save(f"../weights_rl/{episodes % 100}/{decision_agent_name}.h5")
 
             self._reset_pos_agents()
             train_gameState.set_map(train_map)
             progress_bar.update_progress(i + 1) # update progress in progessbar
             
-        if step_nbr % 500 == 0:
-            for decision_agent_name, decision_agent in self.decisionAgents.items():
-                decision_agent: Agent
-                decision_agent.save(f"../weights_rl/{decision_agent_name}.h5")
+        # if step_nbr % 500 == 0:
+        for decision_agent_name, decision_agent in self.decisionAgents.items():
+            decision_agent: Agent
+            decision_agent.model.save(f"../weights_rl/{episodes % 100}/{decision_agent_name}.h5")
         
 
     def random_move(self):

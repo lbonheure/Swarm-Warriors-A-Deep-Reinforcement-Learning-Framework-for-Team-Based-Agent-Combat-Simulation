@@ -42,9 +42,11 @@ class GameState:
                 #rewards[a] = [0 for i in range(len(move_set))]
                 #rewards[a][move_set.index(d)] = self._movement(a, d)
                 rewards[a] = [self._movement(a, d) if pos_act == d else 0 for pos_act in move_set]
+                
         for a in actions.keys():  # Attack action of the agent
             if actions[a] == "A":
                 #rewards[a] = self._atk(self.agents[a])
+                d = actions[a]
                 rewards[a] = [self._atk(self.agents[a]) if pos_act == d else 0 for pos_act in move_set]
 
         for a in actions.keys():  # no action -> dead agent

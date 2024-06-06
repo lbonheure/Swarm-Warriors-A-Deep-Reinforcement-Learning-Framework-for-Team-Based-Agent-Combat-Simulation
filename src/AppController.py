@@ -75,12 +75,12 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         # TODO interface graphique permetant de visualiser la progression du training
         pb = ProgressBarView(self.appView)
         pb.show()
-
+        
         if self.train_thread is None or not self.train_thread.is_alive():
             self.train_thread = thr.Thread(target=self._train_model, name="train_thread", args=[pb], daemon=True)
             self.train_thread.start()
-
-
+        
+    
     def _train_model(self, progress_bar):
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Disable the spam Warning from TensorFlow
 
@@ -92,7 +92,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         self._reset_pos_agents()
         train_gameState = GameState(train_map, self.agents)
         # train_gameState.set_agents(agents=self.agents)
-        episodes = 500
+        episodes = 100
         list_old_states = {a:[] for a in self.agents.keys()}
         list_rewards = {a:[] for a in self.agents.keys()}
         list_new_states = {a:[] for a in self.agents.keys()}
@@ -129,7 +129,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
                         actions[a] = d
                     else:
                         actions[a] = 0
-
+                
                 #print("nb agents actions =", len(actions.keys()))
                 rewards = train_gameState.update_state(actions)
                 #print("nb agents rewards =", len(rewards.keys()))
@@ -152,24 +152,27 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
                         new_states[a] = new_states[a] + [hp]
                         # Train the agent over this single step
                         #decision_agent.training_montage(old_states[a], rewards[a], new_states[a], end)
+
+                        if (step_nbr % 64 == 0 and step_nbr !=0) or end == True:
+                            print(step_nbr)
+                            # training step
+                            #print(len(list_old_states))
+                            decision_agent.training_montage(tuple(list_old_states[a]), tuple(list_rewards[a]), tuple(list_new_states[a]), tuple(list_end[a]))
+                            list_old_states[a].clear()
+                            list_rewards[a].clear()
+                            list_new_states[a].clear()
+                            list_end[a].clear()
+                        else:
+                            list_old_states[a].append(old_states[a])
+                            #print(rewards.keys())
+                            list_rewards[a].append(rewards[a])
+                            list_new_states[a].append(new_states[a])
+                            list_end[a].append(end)
+
                         # Remember this action and its consequence for later
                         decision_agent.fill_memory(old_states[a], rewards[a], new_states[a], end)
-
-                    if (step_nbr % 64 == 0 and step_nbr !=0) or done:
-                        print(step_nbr)
-                        # training step
-                        #print(len(list_old_states))
-                        decision_agent.training_montage(tuple(list_old_states[a]), tuple(list_rewards[a]), tuple(list_new_states[a]), tuple(list_end[a]))
-                        list_old_states[a].clear()
-                        list_rewards[a].clear()
-                        list_new_states[a].clear()
-                        list_end[a].clear()
-                    else:
-                        list_old_states[a].append(old_states[a])
-                        #print(rewards.keys())
-                        list_rewards[a].append(rewards[a])
-                        list_new_states[a].append(new_states[a])
-                        list_end[a].append(end)
+                    #else:
+                    #    new_states[a] = 0
 
                 #print(step_nbr)
                 step_nbr += 1
@@ -184,18 +187,20 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
             #e_time = (time.time_ns() - start) / 1000000
             #print("time for train long memory:", e_time, "ms")
 
-            # for decision_agent_name, decision_agent in self.decisionAgents.items():
-            #     decision_agent: Agent
-            #     decision_agent.model.save(f"../weights_rl/{episodes % 100}/{decision_agent_name}.h5")
+
+            if step_nbr % 512 == 0:
+                for decision_agent_name, decision_agent in self.decisionAgents.items():
+                    decision_agent: Agent
+                    decision_agent.save(f"../weights_rl/temp/{decision_agent_name}.h5")
+
 
             self._reset_pos_agents()
             train_gameState.set_map(train_map)
             progress_bar.update_progress(i + 1) # update progress in progessbar
             
-        # if step_nbr % 500 == 0:
         for decision_agent_name, decision_agent in self.decisionAgents.items():
             decision_agent: Agent
-            decision_agent.model.save(f"../weights_rl/{episodes % 100}/{decision_agent_name}.h5")
+            decision_agent.save(f"../weights_rl/{time.asctime()}/{decision_agent_name}.h5")
         
 
     def random_move(self):
@@ -252,7 +257,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
     def run_trained_simu(self):
         for decision_agent_name, decision_agent in self.decisionAgents.items():
             decision_agent: Agent
-            decision_agent.load(f"../weights_rl/{decision_agent_name}_501.h5")
+            decision_agent.load(f"../weights_rl/{decision_agent_name}.h5")
         if self.simu_thread is None or not self.simu_thread.is_alive():
             self.running = True
             self.simu_thread = thr.Thread(target=self._run_trained_simu, name="simu_thread", args=[self.speed_simu], daemon=True)

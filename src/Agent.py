@@ -92,6 +92,8 @@ class Agent:
         #print("done", done)
         #print(len(state))
         #print(len(done))
+        if len(state) == 0:
+            return
         state = tf.convert_to_tensor(state, dtype=tf.float32)
         reward = tf.convert_to_tensor(reward, dtype=tf.float32)
         next_state = tf.convert_to_tensor(next_state, dtype=tf.float32)

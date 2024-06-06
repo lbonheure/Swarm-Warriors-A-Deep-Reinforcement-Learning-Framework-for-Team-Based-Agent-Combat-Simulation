@@ -154,7 +154,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
                         #decision_agent.training_montage(old_states[a], rewards[a], new_states[a], end)
 
                         if (step_nbr % 64 == 0 and step_nbr !=0) or end == True:
-                            print(step_nbr)
+                            #print(step_nbr)
                             # training step
                             #print(len(list_old_states))
                             decision_agent.training_montage(tuple(list_old_states[a]), tuple(list_rewards[a]), tuple(list_new_states[a]), tuple(list_end[a]))

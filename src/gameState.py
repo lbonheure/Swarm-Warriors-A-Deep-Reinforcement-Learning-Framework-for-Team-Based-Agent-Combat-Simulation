@@ -34,20 +34,22 @@ class GameState:
 
     def update_state(self, actions: dict):
         # template actions: {"agent1":"N", "agent2":"A", "agent3":"E"}
-        move_set = ["N", "S", "W", "E"]
+        move_set = ["N", "S", "W", "E", "A"]
         rewards = {}
         for a in actions.keys():  # Movement action of the agent
             if actions[a] != "A" and actions[a] in move_set:
                 d = actions[a]
-                rewards[a] = self._movement(a, d)
-
+                #rewards[a] = [0 for i in range(len(move_set))]
+                #rewards[a][move_set.index(d)] = self._movement(a, d)
+                rewards[a] = [self._movement(a, d) if pos_act == d else 0 for pos_act in move_set]
         for a in actions.keys():  # Attack action of the agent
             if actions[a] == "A":
-                rewards[a] = self._atk(self.agents[a])
+                #rewards[a] = self._atk(self.agents[a])
+                rewards[a] = [self._atk(self.agents[a]) if pos_act == d else 0 for pos_act in move_set]
 
         for a in actions.keys():  # no action -> dead agent
             if actions[a] != "A" and actions[a] not in move_set:
-                rewards[a] = 0
+                rewards[a] = [0 for pos_act in move_set]
 
         self.get_infos(self.agents)
         return rewards

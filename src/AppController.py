@@ -157,10 +157,8 @@ class AppController(AppView.Listener):
                 for team, count in team_number_alive.items():  # if 1 team is completely dead
                     if count == 0:
                         done = True
-
-            for a in self.agents:
-                decision_agent = self.agents[a]["AI"]
-                decision_agent: Agent
+                
+            for decision_agent_name, decision_agent in self.decisionAgents.items():
                 decision_agent.train_long_memory()
 
             if step_nbr % 500 == 0:
@@ -180,7 +178,7 @@ class AppController(AppView.Listener):
             # hp = self.agents[a]["hp"]
             # decision_agent: Agent
             # d = decision_agent.act_best(self.gameState.get_infos(self.agents)[a] + [hp])
-            d = random.choice(["N", "S", "W", "E"])
+            d = random.choice(["N", "S", "W", "E", "A"])
             actions[a] = d
         self.gameState.update_state(actions)
         self.grid.update(self.gameState)  # Show changes on the graphical interface

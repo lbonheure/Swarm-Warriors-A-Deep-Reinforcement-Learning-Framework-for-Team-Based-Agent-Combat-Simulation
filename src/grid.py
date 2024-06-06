@@ -137,6 +137,12 @@ class Grid:
         y1 = (y * u_y) + (u_y / 2) + (u / 2)
 
         self.canvas.create_oval(x0, y0, x1, y1, fill=color, outline=color, tags=name)
+        if agent["AI"].get_range() == 1: # melee fighter
+            self.canvas.create_line(x0, y0, x1, y1, fill="black", tags=name)
+            self.canvas.create_line(x0, y1, x1, y0, fill="black", tags=name)
+        else: # distance fighter
+            xc = (x * u_x) + (u_x / 2)
+            self.canvas.create_line(xc, y0, xc, y1, fill="black", tags=name)
         self.canvas.update()
 
     def _draw_base(self, name, params):

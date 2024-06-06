@@ -188,19 +188,25 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
             #print("time for train long memory:", e_time, "ms")
 
             
-            if step_nbr % 512 == 0:
-                for decision_agent_name, decision_agent in self.decisionAgents.items():
-                    decision_agent: Agent
-                    decision_agent.save(f"../weights_rl/temp/{decision_agent_name}.h5")
+            for decision_agent_name, decision_agent in self.decisionAgents.items():
+                decision_agent: Agent
+                decision_agent.save(f"../weights_rl/temp/{decision_agent_name}.weights.h5")
             
 
             self._reset_pos_agents()
             train_gameState.set_map(train_map)
             progress_bar.update_progress(i + 1) # update progress in progessbar
             
+        t = time.ctime()
+        path = "../weights_rl/"
+        for l in t:
+            if l == ":":
+                l = "-"
+            path += l
+        os.mkdir(f"{path}")
         for decision_agent_name, decision_agent in self.decisionAgents.items():
             decision_agent: Agent
-            decision_agent.save(f"../weights_rl/{time.asctime()}/{decision_agent_name}.h5")
+            decision_agent.save(f"{path}/{decision_agent_name}.weights.h5")
         
 
     def random_move(self):
@@ -257,7 +263,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
     def run_trained_simu(self):
         for decision_agent_name, decision_agent in self.decisionAgents.items():
             decision_agent: Agent
-            decision_agent.load(f"../weights_rl/{decision_agent_name}.h5")
+            decision_agent.load(f"../weights_rl/temp/{decision_agent_name}.weights.h5")
         if self.simu_thread is None or not self.simu_thread.is_alive():
             self.running = True
             self.simu_thread = thr.Thread(target=self._run_trained_simu, name="simu_thread", args=[self.speed_simu], daemon=True)

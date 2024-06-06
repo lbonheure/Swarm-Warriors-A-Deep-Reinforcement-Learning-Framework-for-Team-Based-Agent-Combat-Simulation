@@ -91,7 +91,7 @@ class AppController(AppView.Listener):
         self._reset_pos_agents()
         train_gameState = GameState(train_map, self.agents)
         # train_gameState.set_agents(agents=self.agents)
-        episodes = 1000
+        episodes = 500
         for i in tqdm(range(episodes)):
             done = False
             step_nbr = 0
@@ -151,7 +151,6 @@ class AppController(AppView.Listener):
                         new_states[a] = 0
 
                 step_nbr += 1
-                progress_bar.update_progress(step_nbr) # update progress in progessbar
 
                 for team, count in team_number_alive.items():  # if 1 team is completely dead
                     if count == 0:
@@ -166,6 +165,8 @@ class AppController(AppView.Listener):
                     decision_agent.model.save(f"../weights_rl/{decision_agent_name}.h5")
 
             self._reset_pos_agents()
+            train_gameState.set_map(train_map)
+            progress_bar.update_progress(i + 1) # update progress in progessbar
 
 
     def random_move(self):

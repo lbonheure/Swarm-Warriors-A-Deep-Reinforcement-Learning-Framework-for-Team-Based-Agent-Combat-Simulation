@@ -82,14 +82,14 @@ class GameState:
                         target = self.abs_grid[yo][xo]
                         self.agents[target]["hp"] -= atk
                         hit = True
-                        if self.agents[target]["AI"].getcolor() == da.get_color():
-                            reward -= 15  # -10 points per hit ally
+                        if self.agents[target]["AI"].get_color() == da.get_color():
+                            reward -= 15  # -15 points per hit ally
                         elif self.agents[target]["hp"] <= 0:
                             reward += 20 # +20 points per killed ennemy
                         else:
                             reward += 10 # +10 points per hit ennemy
         if not hit:
-           reward -= 0.1  # -1 point if no hit
+           reward -= 0.1  # -0.11 point if no hit
         return reward
 
     def _movement(self, agent, direction):

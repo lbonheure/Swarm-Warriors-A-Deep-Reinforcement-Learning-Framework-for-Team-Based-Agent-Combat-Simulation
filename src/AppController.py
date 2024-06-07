@@ -84,7 +84,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
     def _train_model(self, progress_bar):
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Disable the spam Warning from TensorFlow
         episodes = 200
-        progress_bar.set_value(200)
+        progress_bar.set_value(episodes)
         list_old_states = {a:[] for a in self.agents.keys()}
         list_rewards = {a:[] for a in self.agents.keys()}
         list_new_states = {a:[] for a in self.agents.keys()}

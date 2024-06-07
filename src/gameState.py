@@ -1,5 +1,3 @@
-import copy
-
 from map import Map
 from Agent import CombatAgent
 

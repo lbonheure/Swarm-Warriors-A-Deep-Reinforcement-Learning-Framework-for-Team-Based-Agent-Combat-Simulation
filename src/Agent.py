@@ -1,7 +1,5 @@
 import random
 from collections import deque
-import math
-import time
 
 import numpy as np
 import tensorflow as tf
@@ -170,7 +168,6 @@ class Agent:
         """
         Fill the buffer with previous experiences
         :param state:original state
-        :param action: the action chosen by the network
         :param reward:reward received
         :param next_state:state after the action
         :param done:boolean value to signify whether the end of an episode is reached

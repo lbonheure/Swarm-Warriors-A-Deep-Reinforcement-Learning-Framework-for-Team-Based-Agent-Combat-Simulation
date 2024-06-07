@@ -1,4 +1,3 @@
-import tkinter as tk
 import tkinter.messagebox as msg
 import os
 from tkinter import filedialog as fd

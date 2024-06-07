@@ -93,6 +93,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         train_gameState = GameState(train_map, self.agents)
         # train_gameState.set_agents(agents=self.agents)
         episodes = 200
+        progress_bar.set_value(200)
         list_old_states = {a:[] for a in self.agents.keys()}
         list_rewards = {a:[] for a in self.agents.keys()}
         list_new_states = {a:[] for a in self.agents.keys()}
@@ -255,7 +256,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
     def run_trained_simu(self):
         for decision_agent_name, decision_agent in self.decisionAgents.items():
             decision_agent: Agent
-            decision_agent.load(f"../weights_rl/{decision_agent_name}.h5")
+            decision_agent.load(f"../weights_rl/2d_test/{decision_agent_name}.h5")
         if self.simu_thread is None or not self.simu_thread.is_alive():
             self.running = True
             self.simu_thread = thr.Thread(target=self._run_trained_simu, name="simu_thread", args=[self.speed_simu], daemon=True)

@@ -19,7 +19,7 @@ move_list = ["N", "S", "W", "E", "A"]
 class Agent:
     def __init__(self, init_pos=None, input_size=25, output_size=5,
                  epsilon=0.9,
-                 decay=0.9995,
+                 decay=0.9863,
                  gamma=0.9,
                  loss_fct="mse",
                  opt_fct="adam",

@@ -204,6 +204,10 @@ class Agent:
         state = self.get_information(game)
         return self.act_best(state)
 
+    def calculate_decay(self, episodes):
+        target_ratio = self.epsilon_min / self.epsilon
+        self.decay = target_ratio ** (1 / (0.8 * episodes))
+
     def move(self):
         for i in range(self.deplacement_capacity):
             d = self._choose_direction()

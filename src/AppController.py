@@ -265,15 +265,19 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
             self.simu_thread.start()
             
     def run_trained_simu(self):
-        for decision_agent_name, decision_agent in self.decisionAgents.items():
-            decision_agent: Agent
-            decision_agent.load(f"../weights_rl/temp/{decision_agent_name}.weights.h5")
+        try:
+            for decision_agent_name, decision_agent in self.decisionAgents.items():
+                decision_agent: Agent
+                decision_agent.load(f"../weights_rl/temp/{decision_agent_name}.weights.h5")
+        except:
+            msg.showwarning("Error in model loading", 
+                            "No models were found. Please train the model before running the simulation. By default, the simulation will be run with the untrained model")
         if self.simu_thread is None or not self.simu_thread.is_alive():
             self.running = True
             self.simu_thread = thr.Thread(target=self._run_trained_simu, name="simu_thread", args=[self.speed_simu], daemon=True)
             self.simu_thread.start()
 
-    def _run_random_simu(self, speed):                
+    def _run_random_simu(self, speed):
         while self.running:
             team_color = {}
             for a in self.agents.keys():

@@ -83,7 +83,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
     
     def _train_model(self, progress_bar):
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Disable the spam Warning from TensorFlow
-
+        '''
         # Load the map
         train_map = Map(agent_bases=self.agents)
         train_map.load_filename("map0.csv")
@@ -92,6 +92,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         self._reset_pos_agents()
         train_gameState = GameState(train_map, self.agents)
         # train_gameState.set_agents(agents=self.agents)
+        '''
         episodes = 200
         progress_bar.set_value(episodes)
         list_old_states = {a:[] for a in self.agents.keys()}
@@ -112,6 +113,17 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
                     team_number_alive[team_color] += 1
 
             agent_status = {agent_id: True for agent_id, agent_info in self.agents.items()}
+
+            if i % 20 == 0: # Change the map every 20 episodes
+                # Load the map
+                train_map = Map(random=True, agent_bases=self.agents)
+                if i == 180: # Last 20 episodes with the predefined map0
+                    train_map.load_filename("map0.csv")
+                self.grid.set_map(train_map)
+                # Place the agents in their bases on the map
+                self._reset_pos_agents()
+                train_gameState = GameState(train_map, self.agents)
+
             while not done:
                 if step_nbr == 512:
                     done = True
@@ -145,16 +157,16 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
                         if hp <= 0 or done:
                             end = True
                             agent_status[a] = False
-                            #self.agents[a]["AI"]: CombatAgent
                             agent_color = self.agents[a]["AI"].get_color()
                             team_number_alive[agent_color] -= 1
-
+                            if team_number_alive[agent_color] == 0:
+                                done = True
                         decision_agent = self.agents[a]["AI"]
                         new_states[a] = new_states[a] + [hp]
                         # Train the agent over this single step
                         #decision_agent.training_montage(old_states[a], rewards[a], new_states[a], end)
-                        
-                        if (step_nbr % 64 == 0 and step_nbr !=0) or end == True:
+
+                        if (step_nbr % 64 == 0 and step_nbr !=0) or end or done:
                             #print(step_nbr)
                             # training step
                             #print(len(list_old_states))
@@ -169,7 +181,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
                             list_rewards[a].append(rewards[a])
                             list_new_states[a].append(new_states[a])
                             list_end[a].append(end)
-                        
+
                         # Remember this action and its consequence for later
                         decision_agent.fill_memory(old_states[a], rewards[a], new_states[a], end)
                     #else:
@@ -178,9 +190,9 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
                 #print(step_nbr)
                 step_nbr += 1
 
-                for team, count in team_number_alive.items():  # if 1 team is completely dead
-                    if count == 0:
-                        done = True
+                #for team, count in team_number_alive.items():  # if 1 team is completely dead
+                #    if count == 0:
+                #        done = True
             
             #start = time.time_ns()
             for decision_agent_name, decision_agent in self.decisionAgents.items():
@@ -188,9 +200,10 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
             #e_time = (time.time_ns() - start) / 1000000
             #print("time for train long memory:", e_time, "ms")
 
+
             for decision_agent_name, decision_agent in self.decisionAgents.items():
                 decision_agent: Agent
-                decision_agent.save(f"../weights_rl/temp/{decision_agent_name}.h5")
+                decision_agent.save(f"../weights_rl/temp/{decision_agent_name}.weights.h5")
 
 
             self._reset_pos_agents()
@@ -263,7 +276,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
     def run_trained_simu(self):
         for decision_agent_name, decision_agent in self.decisionAgents.items():
             decision_agent: Agent
-            decision_agent.load(f"../weights_rl/2d_test/{decision_agent_name}.h5")
+            decision_agent.load(f"../weights_rl/temp/{decision_agent_name}.weights.h5")
         if self.simu_thread is None or not self.simu_thread.is_alive():
             self.running = True
             self.simu_thread = thr.Thread(target=self._run_trained_simu, name="simu_thread", args=[self.speed_simu], daemon=True)

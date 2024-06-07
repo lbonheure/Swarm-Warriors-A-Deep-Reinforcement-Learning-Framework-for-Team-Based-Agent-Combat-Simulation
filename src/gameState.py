@@ -89,7 +89,7 @@ class GameState:
                         else:
                             reward += 10 # +10 points per hit ennemy
         if not hit:
-           reward -= 0.1  # -1 point if no hit
+           reward -= 0.1  # -0.1 point if no hit
         return reward
 
     def _movement(self, agent, direction):

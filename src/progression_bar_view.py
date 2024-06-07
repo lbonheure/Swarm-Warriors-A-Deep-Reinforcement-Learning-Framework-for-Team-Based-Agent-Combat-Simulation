@@ -29,7 +29,7 @@ class ProgressBarView(tk.Toplevel):
 
     def update_progress(self, value):
         self.progressVar.set(value)
-        self.progressString.set(f"Current Progress: {value/self.value*100}%")
+        self.progressString.set(f"Current Progress: {round(value/self.value*100, 1)}%")
         if value >= self.value:
             msg.showinfo(message="Training done!")
             self.destroy()

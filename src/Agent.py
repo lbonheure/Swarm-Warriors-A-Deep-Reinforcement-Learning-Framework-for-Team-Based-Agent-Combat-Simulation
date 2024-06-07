@@ -17,7 +17,7 @@ move_list = ["N", "S", "W", "E", "A"]
 
 
 class Agent:
-    def __init__(self, init_pos=None, input_size=25, output_size=5,
+    def __init__(self, input_size=25, output_size=5,
                  epsilon=0.9,
                  decay=0.9863,
                  gamma=0.9,
@@ -45,18 +45,18 @@ class Agent:
         self.model = tf.keras.models.Sequential()
         self.model.add(tf.keras.layers.Dense(64, activation="relu", input_shape=(input_size,)))
         #self.model.add(tf.keras.layers.Dense(64, activation="relu"))
+        # self.model.add(tf.keras.layers.Dense(64, activation="relu"))
         self.model.add(tf.keras.layers.Dense(64, activation="relu"))
         self.model.add(tf.keras.layers.Dense(32, activation="relu"))
         self.model.add(tf.keras.layers.Dense(output_size, activation="linear"))
         self.model.compile(
             optimizer=self.opt_fct, loss=self.loss_fct, metrics=self.metrics)
 
-        self.pos_x = 0
-        self.pos_y = 0
-        if init_pos is not None:
-            self.pos_x, self.pos_y = init_pos
 
-        self.deplacement_capacity = random.randint(1, 2)
+    def calculate_decay(self, episodes):
+        target_ratio = self.epsilon_min / self.epsilon
+        self.decay = target_ratio ** (1 / (0.8 * episodes))
+
 
     def train_long_memory(self, batch_size=64):
         """
@@ -204,28 +204,6 @@ class Agent:
         state = self.get_information(game)
         return self.act_best(state)
 
-    def calculate_decay(self, episodes):
-        target_ratio = self.epsilon_min / self.epsilon
-        self.decay = target_ratio ** (1 / (0.8 * episodes))
-
-    def move(self):
-        for i in range(self.deplacement_capacity):
-            d = self._choose_direction()
-            match d:
-                case "N":
-                    self.pos_y += 1
-                case "S":
-                    self.pos_y -= 1
-                case "W":
-                    self.pos_x -= 1
-                case "E":
-                    self.pos_x += 1
-        return self.pos_x, self.pos_y
-
-    def _choose_direction(self):
-        # TODO need a policy
-        return random.choice(DIRECTIONS)
-
 
 class CombatAgent(Agent):
     def __init__(self, color: str, atk_range: int, atk: int) -> None:
@@ -242,44 +220,3 @@ class CombatAgent(Agent):
 
     def get_atk(self):
         return self.atk
-
-"""
-class ResourceAgent(Agent):
-    def __init__(self, id=None, init_pos=None) -> None:
-        super().__init__(id, init_pos)
-
-        self.storage_size = 100
-        self.store = 0
-
-        self.mining_rate = random.random()
-        self.deplacement_speed = 1 - self.mining_rate
-
-    def mine(self, resource_left):
-        r_mined = max(int(self.mining_rate * self.storage_size / 2), resource_left)
-        if self.store + r_mined > self.storage_size:
-            r_mined = self.storage_size - self.store
-        self.store += r_mined
-        return resource_left - r_mined
-
-    def exchange_to(self, max_size):
-        quantity = max(self.store, max_size)
-        self.store -= quantity
-        return quantity
-
-    def exchange_from(self, quantity):
-        self.store += quantity
-        if self.store > self.storage_size:
-            self.store = self.storage_size
-            raise StorageOverload("max size of storage reached!")
-
-    def resource_lim(self):
-        return self.storage_size - self.store
-
-    def move(self):
-        if random.random() < self.deplacement_speed:
-            super().move()
-"""
-"""
-class StorageOverload(Exception):
-    pass
-"""

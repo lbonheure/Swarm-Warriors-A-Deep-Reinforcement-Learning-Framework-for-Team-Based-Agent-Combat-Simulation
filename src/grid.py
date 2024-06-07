@@ -6,7 +6,7 @@ from gameState import GameState
 
 
 class Grid:
-    def __init__(self, master, map: Map=None) -> None:
+    def __init__(self, master, map: Map = None) -> None:
         self.map = map
         self.map_drawed = False
         self.agents = {}
@@ -18,19 +18,23 @@ class Grid:
 
     def destroy(self):
         self.canvas.destroy()
-        
+
     def update(self, gameState: GameState):
+        """
+        Update the grid according to a specific state of the game
+        :param gameState:
+        :return:
+        """
         if self.map is None or self.map != gameState.map:
             self.map = gameState.map
             self._draw_map()
         self.agents = gameState.agents
         self._show_agents()
-        
+
     def set_map(self, map: Map):
         self.map = map
         self._draw_map()
-        
-        
+
     def _update_canvas(self, event=None):
         self._draw_map()
         self._show_agents()
@@ -40,7 +44,7 @@ class Grid:
         h = self.canvas.winfo_height()  # Get current height of canvas
         self.canvas.delete('grid_line')  # Will only remove the grid_line
 
-        # Creates all vertical lines at intevals of 100
+        # Creates all vertical lines at intervals of 100
         for i in range(0, w, 100):
             self.canvas.create_line([(i, 0), (i, h)], tag='grid_line')
 
@@ -65,6 +69,11 @@ class Grid:
             self.canvas.create_line([(0, i * u_y), (w, i * u_y)], tag='grid_line')
 
     def _draw_map(self, event=None):
+        """
+        Draw the map with all its elements
+        :param event:
+        :return:
+        """
         if self.map is None:
             raise MapIsNoneError
         self.map_drawed = True
@@ -72,20 +81,21 @@ class Grid:
         h = self.canvas.winfo_height()  # Get current height of canvas
         u_x = w / self.map.width
         u_y = h / self.map.height
-        
+
         # Draw grid
         self._create_grid_nxm(event)
-        
+
         # Draw walls
         self.canvas.delete("wall")
         for (x, y) in self.map.walls_positions:
-            self.canvas.create_rectangle(x * u_x, y * u_y, (x + 1) * u_x, (y + 1) * u_y, fill="grey", outline="grey", tags="wall")
-        
+            self.canvas.create_rectangle(x * u_x, y * u_y, (x + 1) * u_x, (y + 1) * u_y, fill="grey", outline="grey",
+                                         tags="wall")
+
         # Draw ores
         self.canvas.delete("ore")
         for (x, y) in self.map.resources_positions:
             self._draw_hexagon(x, y, u_x, u_y)
-            
+
         # Draw bases
         if self.map.agents_bases:
             for b in self.map.agents_bases.keys():
@@ -116,6 +126,12 @@ class Grid:
             self._draw_agent(a, self.agents[a])
 
     def _draw_agent(self, name, agent):
+        """
+        Draw an agent according to its type
+        :param name:
+        :param agent: combat_agent
+        :return:
+        """
         if self.map is None:
             raise MapIsNoneError
         self.canvas.delete(name)
@@ -137,19 +153,25 @@ class Grid:
         y1 = (y * u_y) + (u_y / 2) + (u / 2)
 
         self.canvas.create_oval(x0, y0, x1, y1, fill=color, outline=color, tags=name)
-        if agent["AI"].get_range() == 1: # melee fighter
+        if agent["AI"].get_range() == 1:  # melee fighter
             self.canvas.create_line(x0, y0, x1, y1, fill="black", tags=name)
             self.canvas.create_line(x0, y1, x1, y0, fill="black", tags=name)
-        else: # distance fighter
+        else:  # distance fighter
             xc = (x * u_x) + (u_x / 2)
             self.canvas.create_line(xc, y0, xc, y1, fill="black", tags=name)
         self.canvas.update()
 
-    def _draw_base(self, name, params):
+    def _draw_base(self, name, combat_agent):
+        """
+        Draw agent starting points
+        :param name:
+        :param combat_agent: CombatAgent
+        :return:
+        """
         if self.map is None:
             raise MapIsNoneError
-        (x, y) = params["position"]
-        color = params["AI"].get_color()
+        (x, y) = combat_agent["position"]
+        color = combat_agent["AI"].get_color()
         w = self.canvas.winfo_width()  # Get current width of canvas
         h = self.canvas.winfo_height()  # Get current height of canvas
         self.canvas.delete("b:" + name)
@@ -158,7 +180,7 @@ class Grid:
         u_y = h / self.map.height
         self.canvas.create_rectangle(x * u_x + 1, y * u_y + 1, (x + 1) * u_x - 1, (y + 1) * u_y - 1, fill=None,
                                      outline=color, width=3, tags="b:" + name)
-    
-    
+
+
 class MapIsNoneError(Exception):
     pass

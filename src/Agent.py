@@ -45,7 +45,6 @@ class Agent:
         self.model = tf.keras.models.Sequential()
         self.model.add(tf.keras.layers.Dense(64, activation="relu", input_shape=(input_size,)))
         #self.model.add(tf.keras.layers.Dense(64, activation="relu"))
-        # self.model.add(tf.keras.layers.Dense(64, activation="relu"))
         self.model.add(tf.keras.layers.Dense(64, activation="relu"))
         self.model.add(tf.keras.layers.Dense(32, activation="relu"))
         self.model.add(tf.keras.layers.Dense(output_size, activation="linear"))

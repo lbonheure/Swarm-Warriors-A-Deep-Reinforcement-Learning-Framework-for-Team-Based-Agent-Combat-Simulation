@@ -93,7 +93,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         train_gameState = GameState(train_map, self.agents)
         # train_gameState.set_agents(agents=self.agents)
         episodes = 200
-        progress_bar.set_value(200)
+        progress_bar.set_value(episodes)
         list_old_states = {a:[] for a in self.agents.keys()}
         list_rewards = {a:[] for a in self.agents.keys()}
         list_new_states = {a:[] for a in self.agents.keys()}
@@ -153,7 +153,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
                         new_states[a] = new_states[a] + [hp]
                         # Train the agent over this single step
                         #decision_agent.training_montage(old_states[a], rewards[a], new_states[a], end)
-
+                        
                         if (step_nbr % 64 == 0 and step_nbr !=0) or end == True:
                             #print(step_nbr)
                             # training step
@@ -169,7 +169,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
                             list_rewards[a].append(rewards[a])
                             list_new_states[a].append(new_states[a])
                             list_end[a].append(end)
-
+                        
                         # Remember this action and its consequence for later
                         decision_agent.fill_memory(old_states[a], rewards[a], new_states[a], end)
                     #else:
@@ -197,9 +197,16 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
             train_gameState.set_map(train_map)
             progress_bar.update_progress(i + 1) # update progress in progessbar
             
+        t = time.ctime()
+        path = "../weights_rl/"
+        for l in t:
+            if l == ":":
+                l = "-"
+            path += l
+        os.mkdir(f"{path}")
         for decision_agent_name, decision_agent in self.decisionAgents.items():
             decision_agent: Agent
-            decision_agent.save(f"../weights_rl/{time.asctime()}/{decision_agent_name}.h5")
+            decision_agent.save(f"{path}/{decision_agent_name}.weights.h5")
         
 
     def random_move(self):

@@ -61,8 +61,6 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
     def run(self):
         """Launch the application
         """
-        """Launch the application
-        """
         self.appView.show()
         self.appView.mainloop()
 

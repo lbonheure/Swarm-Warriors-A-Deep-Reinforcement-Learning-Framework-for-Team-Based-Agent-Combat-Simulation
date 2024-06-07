@@ -1,4 +1,3 @@
-
 import random
 import copy
 import os
@@ -10,7 +9,9 @@ MINIMUM_DISTANCE_BASES_WALLS = 1
 class Map:
     """Create and store a game map
     """
-    def __init__(self, random=False, width=20, height=20, num_walls=40, num_resource_ores=0, agent_bases:dict=None) -> None:
+
+    def __init__(self, random=False, width=20, height=20, num_walls=40, num_resource_ores=0,
+                 agent_bases: dict = None) -> None:
         """_summary_
 
         Args:
@@ -32,17 +33,27 @@ class Map:
         self.random = random
         self.num_walls = num_walls
         self.num_resource_ores = num_resource_ores
-        
+
         self.walls_positions = []
         self.resources_positions = []
-        
+
         if random:
             self.create_random_map()
         else:
             self.create_map_0()
-            
-    
-    def reset(self, random=False, width=None, height=None, num_walls=None, num_resource_ores=None, agent_bases:dict=None):
+
+    def reset(self, random=False, width=None, height=None, num_walls=None, num_resource_ores=None,
+              agent_bases: dict = None):
+        """
+        Reset the map
+        :param random:
+        :param width:
+        :param height:
+        :param num_walls:
+        :param num_resource_ores:
+        :param agent_bases:
+        :return: None
+        """
         if agent_bases:
             self.agents_bases = copy.deepcopy(agent_bases)
             self.bases_positions.clear()
@@ -57,29 +68,30 @@ class Map:
             self.num_walls = num_walls
         if num_resource_ores:
             self.num_resource_ores = num_resource_ores
-            
+
         if random:
             self.create_random_map()
         else:
             self.create_map_0()
-        
-            
-            
+
     def create_map_0(self):
         if self.width < 20 or self.height < 20:
-                raise ValueError
+            raise ValueError
         self.walls_positions = [(7, 9), (8, 9), (9, 9), (11, 9), (13, 9),
-                            (7, 10), (9, 10), (11, 10), (13, 10),
-                            (7, 11), (9, 11), (11, 11), (12, 11), (13, 11)]
+                                (7, 10), (9, 10), (11, 10), (13, 10),
+                                (7, 11), (9, 11), (11, 11), (12, 11), (13, 11)]
         self.resources_positions = [(8, 10), (12, 10)]
-            
-            
+
     def create_random_map(self):
         self._place_resources()
         self._place_walls()
 
-
     def save(self, file):
+        """
+        Save the map in a specified file
+        :param file:
+        :return: None
+        """
         for y in range(20):
             for x in range(20):
                 if (x, y) in self.bases_positions:
@@ -92,9 +104,9 @@ class Map:
                     file.write("_, ")
             file.write("\n")
         file.close()
-        
+
     def load_filename(self, filename):
-        if(os.path.exists(filename)):
+        if (os.path.exists(filename)):
             file = open(filename, "r")
             self.load(file)
         else:
@@ -104,16 +116,20 @@ class Map:
                     file = open(p, "r")
                     self.load(file)
                     break
-                
-        
+
     def load(self, file):
+        """
+        Load a specified map
+        :param file:
+        :return:
+        """
         self.bases_positions = []
         self.walls_positions = []
         self.resources_positions = []
         y = 0
         x = 0
         for line in file.readlines():
-            line:str
+            line: str
             line = line.strip()
             row = line.split(",")
             for c in row:
@@ -131,8 +147,11 @@ class Map:
         self._assign_bases_to_agents()
         print("map loaded")
 
-
     def _assign_bases_to_agents(self):
+        """
+        Assign agents to their starting positions in the map
+        :return:
+        """
         if self.agents_bases:
             if len(self.bases_positions) == len(self.agents_bases.keys()):
                 for i, a in enumerate(self.agents_bases.keys()):
@@ -141,9 +160,13 @@ class Map:
                 raise Wrong_bases_number_error
 
     def _place_resources(self):
+        """
+        Place the resource in the map
+        :return:
+        """
         # 1. Clear previous positions
         self.resources_positions.clear()
-        
+
         # 2. Seach possible positions
         possible_positions = []
         for x in range(self.width):
@@ -151,11 +174,12 @@ class Map:
                 valid_pos = True
                 if self.bases_positions:
                     for (xb, yb) in self.bases_positions:
-                        if abs(x - xb) <= MINIMUM_DISTANCE_BASES_RESOURCES and abs(y - yb) <= MINIMUM_DISTANCE_BASES_RESOURCES:
+                        if abs(x - xb) <= MINIMUM_DISTANCE_BASES_RESOURCES and abs(
+                                y - yb) <= MINIMUM_DISTANCE_BASES_RESOURCES:
                             valid_pos = False
                 if valid_pos:
                     possible_positions.append((x, y))
-                    
+
         # 3. randomly select positions
         if len(possible_positions) < self.num_resource_ores:
             raise Resources_placement_error
@@ -163,12 +187,15 @@ class Map:
             pos = random.choice(possible_positions)
             self.resources_positions.append(pos)
             possible_positions.remove(pos)
-            
-            
+
     def _place_walls(self):
+        """
+        Place walls in the map
+        :return:
+        """
         # 1. Clear previous positions
         self.walls_positions.clear()
-        
+
         # 2. Seach possible positions
         possible_positions = []
         for x in range(self.width):
@@ -182,7 +209,7 @@ class Map:
                     valid_pos = False
                 if valid_pos:
                     possible_positions.append((x, y))
-        
+
         # 3. randomly select positions
         if len(possible_positions) < self.num_walls:
             raise Walls_placement_error
@@ -191,14 +218,14 @@ class Map:
             pos = random.choice(possible_positions)
             self.walls_positions.append(pos)
             possible_positions.remove(pos)
-        
+
         # 4. Correct possible errors
         if self.bases_positions:
             c = 0
             while True:
                 way_exists = True
-                c+= 1
-                if c == 2000: # avoid infinite loop
+                c += 1
+                if c == 2000:  # avoid infinite loop
                     break
                 for (xb, yb) in self.bases_positions:
                     for r_pos in self.resources_positions:
@@ -207,7 +234,7 @@ class Map:
                             break
                     if not way_exists:
                         break
-                if not way_exists:           
+                if not way_exists:
                     possible_positions = copy.copy(p_positions)
                     self.walls_positions.append(pos)
                     for i in range(self.num_walls):
@@ -216,32 +243,38 @@ class Map:
                         possible_positions.remove(pos)
                 else:
                     break
-        
-    
+
     def _find_way(self, position, goal, visited: list):
+        """
+        Check if there are no obstacles completely blocking an agent in its base
+        :param position:
+        :param goal:
+        :param visited:
+        :return:
+        """
         if position == goal:
             return True
         visited.append(position)
         x, y = position
-        if x+1 < self.width and (x+1, y) not in visited and (x+1, y) not in self.walls_positions:
-            if(self._find_way((x+1, y), goal, visited)):
+        if x + 1 < self.width and (x + 1, y) not in visited and (x + 1, y) not in self.walls_positions:
+            if self._find_way((x + 1, y), goal, visited):
                 return True
-            
-        if y+1 < self.height and (x, y+1) not in visited and (x, y+1) not in self.walls_positions:
-            if(self._find_way((x, y+1), goal, visited)):
+
+        if y + 1 < self.height and (x, y + 1) not in visited and (x, y + 1) not in self.walls_positions:
+            if self._find_way((x, y + 1), goal, visited):
                 return True
-            
-        if x-1 >= 0 and (x-1, y) not in visited and (x-1, y) not in self.walls_positions:
-            if(self._find_way((x-1, y), goal, visited)):
+
+        if x - 1 >= 0 and (x - 1, y) not in visited and (x - 1, y) not in self.walls_positions:
+            if self._find_way((x - 1, y), goal, visited):
                 return True
-            
-        if y-1 >= 0 and (x, y-1) not in visited and (x, y-1) not in self.walls_positions:
-            if(self._find_way((x, y-1), goal, visited)):
+
+        if y - 1 >= 0 and (x, y - 1) not in visited and (x, y - 1) not in self.walls_positions:
+            if self._find_way((x, y - 1), goal, visited):
                 return True
-            
+
         return False
 
-    
+
 class Resources_placement_error(Exception):
     """Error in placement of resources
     """

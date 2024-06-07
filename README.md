@@ -40,3 +40,5 @@ The interface should be friendly enought to allow anyone to navigate in the appl
 - *Stop:* Stop the simulation.
 - *Speed:* Modify the speed of the simulation.
 - *Reset:* Reset the simulation: all agents return to their starting point.
+
+![Interface](pictures/interface.png "Graphical interface of the application")

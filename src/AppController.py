@@ -266,12 +266,13 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
             
     def run_trained_simu(self):
         try:
+            dir = fd.askdirectory(initialdir="../weights_rl")
             for decision_agent_name, decision_agent in self.decisionAgents.items():
                 decision_agent: Agent
-                decision_agent.load(f"../weights_rl/temp/{decision_agent_name}.weights.h5")
+                decision_agent.load(f"{dir}/{decision_agent_name}.weights.h5")
         except:
-            msg.showwarning("Error in model loading", 
-                            "No models were found. Please train the model before running the simulation. By default, the simulation will be run with the untrained model")
+            msg.showwarning("Error in model loading",
+                            "No suitable models were found. Please train the model before running the simulation. By default, the simulation will be run with the untrained model")
         if self.simu_thread is None or not self.simu_thread.is_alive():
             self.running = True
             self.simu_thread = thr.Thread(target=self._run_trained_simu, name="simu_thread", args=[self.speed_simu], daemon=True)

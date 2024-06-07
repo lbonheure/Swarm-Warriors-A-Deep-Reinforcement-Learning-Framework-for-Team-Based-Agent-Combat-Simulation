@@ -12,6 +12,10 @@ def sign(x):
 
 
 class GameState:
+    """
+    Class representing the actual state of the game and containing all the action that can happen inside
+    """
+
     def __init__(self, map: Map = None, agents=None) -> None:
         self.map = map
         self.abs_grid = []
@@ -30,9 +34,13 @@ class GameState:
         for a in agents.keys():
             (x, y) = agents[a]["position"]
             self.abs_grid[y][x] = a
-        #self.get_infos(self.agents)
 
     def update_state(self, actions: dict):
+        """
+        Update the state off all agents with their corresponding action and return their reward
+        :param actions: dictionary with agent and their actions
+        :return: dictionary with agent and the reward corresponding to their action
+        """
         # template actions: {"agent1":"N", "agent2":"A", "agent3":"E"}
         move_set = ["N", "S", "W", "E", "A"]
         rewards = {}
@@ -40,7 +48,7 @@ class GameState:
             if actions[a] != "A" and actions[a]:
                 d = actions[a]
                 rewards[a] = [self._movement(a, d) if pos_act == d else 0 for pos_act in move_set]
-                
+
         for a in actions.keys():  # Attack action of the agent
             if actions[a] == "A":
                 d = actions[a]
@@ -50,13 +58,14 @@ class GameState:
             if actions[a] != "A" and actions[a] not in move_set:
                 rewards[a] = [0 for pos_act in move_set]
 
-        #self.get_infos(self.agents)
         return rewards
 
-    #def is_in_his_base(self, agent):
-    #    return self.agents[agent] == self.bases[agent]
-
     def get_infos(self, agents: dict):
+        """
+        Check the information about the surrounding of the agents
+        :param agents:
+        :return: Dictionary with information of all the agents
+        """
         self.infos.clear()
         for a in agents.keys():
             (x, y) = agents[a]["position"]
@@ -64,6 +73,11 @@ class GameState:
         return self.infos
 
     def _atk(self, agent):
+        """
+        Apply the attack of an agent
+        :param agent:
+        :return: Reward of the attack
+        """
         da = agent["AI"]
         da: CombatAgent
         r_atk = da.get_range()
@@ -85,14 +99,20 @@ class GameState:
                         if self.agents[target]["AI"].get_color() == da.get_color():
                             reward -= 15  # -15 points per hit ally
                         elif self.agents[target]["hp"] <= 0:
-                            reward += 20 # +20 points per killed ennemy
+                            reward += 20  # +20 points per killed ennemy
                         else:
-                            reward += 10 # +10 points per hit ennemy
+                            reward += 10  # +10 points per hit ennemy
         if not hit:
-           reward -= 0.1  # -0.11 point if no hit
+            reward -= 0.1  # -0.1 point if no hit
         return reward
 
     def _movement(self, agent, direction):
+        """
+        Apply the movement of the agent given its direction
+        :param agent:
+        :param direction:
+        :return: Reward corresponding to the move
+        """
         (x, y) = self.agents[agent]["position"]
         xp = x
         yp = y
@@ -105,26 +125,40 @@ class GameState:
                 y -= 1
             case "S":
                 y += 1
-        if x < 0 or x >= self.map.width or y < 0 or y >= self.map.height or self.abs_grid[y][x] != "_": # Move only in the grid and to free cells
-            return -1 # reward = -1 if no move
-        # TODO verifier synchro abs_grid et position agent
+        if x < 0 or x >= self.map.width or y < 0 or y >= self.map.height or self.abs_grid[y][
+            x] != "_":  # Move only in the grid and to free cells
+            return -1  # reward = -1 if no move
         self.abs_grid[yp][xp] = "_"
         self.abs_grid[y][x] = agent
         self.agents[agent]["position"] = (x, y)
-        #print("move", agent, "from", (xp, yp), "to", (x, y), "abs_grid value=", self.abs_grid[y][x])
-        return 0 # reward = 0 if move
+        return 0  # reward = 0 if move
 
     def _observe_surrounding(self, position, v_range=3):
+        """
+        Check for information in a certain range around the agent
+        :param position:
+        :param v_range: limitation of the agent sight
+        :return: information observed
+        """
         cx, cy = position
         da_self = self.agents[self.abs_grid[cy][cx]]["AI"]
         agents_pos, resources_pos, walls_pos = [], [], []
 
         def get_relevant_positions(distance=3):
+            """
+            Search only in place the agent can perceive information
+            """
             return [(x, y) for x in range(-distance, distance + 1)
                     for y in range(-distance, distance + 1)
                     if abs(x) + abs(y) <= distance and (x, y) != (0, 0)]
 
         def check_position(x, y):
+            """
+            Check what is in a specific position
+            :param x:
+            :param y:
+            :return: number corresponding to the element observed
+            """
             if x < 0 or y < 0 or y >= len(self.abs_grid) or x >= len(self.abs_grid[0]):
                 return -1  # Outside grid
             cell = self.abs_grid[y][x]
@@ -136,7 +170,7 @@ class GameState:
             elif cell == "R":
                 resources_pos.append((x, y))
                 return 2  # Resource
-            else:
+            else:  # Found an agent
                 da_other = self.agents[cell]["AI"]
                 da: CombatAgent
                 color_other = da_other.get_color()
@@ -163,7 +197,11 @@ class GameState:
         return surrounding_info
 
     def _create_abs_grid_from_map(self, map: Map):
-        #print("create_abs_grid_from_map")
+        """
+        Generate the environment were the action will take place
+        :param map:
+        :return: None
+        """
         abs_grid = [["_" for j in range(map.width)] for i in range(map.height)]
         for (x, y) in map.walls_positions:
             abs_grid[y][x] = "W"
@@ -171,7 +209,6 @@ class GameState:
             abs_grid[y][x] = "R"
         self.bases = map.agents_bases
         for a in self.bases.keys():
-            # print(self.bases[a])
             (x, y) = self.bases[a]["position"]
             abs_grid[y][x] = a
         return abs_grid

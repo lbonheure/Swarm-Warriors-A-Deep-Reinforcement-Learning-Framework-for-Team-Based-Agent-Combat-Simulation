@@ -54,6 +54,10 @@ class Agent:
         
         
     def calculate_decay(self, episodes):
+        """
+        Compute the value of decay parameter in function of the number of training episodes
+        :param episodes: Number of training episodes
+        """
         target_ratio = self.epsilon_min / self.epsilon
         self.decay = target_ratio ** (1 / (0.8 * episodes))
 
@@ -86,11 +90,6 @@ class Agent:
         :param done: Boolean about the state of the game (True when game finished)
         :return: None
         """
-        #print("state=", state)
-        #print("reward=", reward)
-        #print("done", done)
-        #print(len(state))
-        #print(len(done))
         if len(state) == 0:
             return
         state = tf.convert_to_tensor(state, dtype=tf.float32)

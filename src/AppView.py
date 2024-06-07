@@ -5,8 +5,6 @@ from grid import Grid
 
 class AppView(tk.Tk):
     class Listener:
-        # def show_agents(self):
-        #    pass
         def random_move(self):
             pass
 
@@ -47,7 +45,6 @@ class AppView(tk.Tk):
 
         # Widgets in the view
         self.buttons_frame = tk.Frame(self)
-        # self.show_button = tk.Button(self.buttons_frame, text="Show agents", command=self.call_controller_show_agents)
         self.move_button = tk.Button(self.buttons_frame, text="Random Move", command=self._call_controller_random_move)
         self.new_map_button = tk.Button(self.buttons_frame, text="New map", command=self._call_controller_new_map)
         self.save_map_button = tk.Button(self.buttons_frame, text="Save map", command=self._call_controller_save_map)
@@ -65,29 +62,24 @@ class AppView(tk.Tk):
         self.listener = None
 
     def setListener(self, l: Listener):
-        """Set the listener
-
-        Args:
-            l (Listener): the new listener
+        """
+        Set the listener
+        :param l (Listener): the new listener
         """
         self.listener = l
 
     def get_speed_simu(self):
-        """Return the variable that contains the speed of the simulation
-
-        Returns:
-            IntVar: dynamic variable containing the speed of the simulation
+        """
+        Return the variable that contains the speed of the simulation
+        :return: dynamic variable containing the speed of the simulation
         """
         return self.speed_var
 
     def createGrid(self, map=None) -> Grid:
-        """Create a new grid
-
-        Args:
-            map (Map, optional): the map showed by the grid
-
-        Returns:
-            Grid: the new grid
+        """
+        Create a new grid
+        :param map (Map, optional): the map showed by the grid
+        :return: the new grid
         """
         if self.grid:
             self.grid.destroy()
@@ -95,10 +87,9 @@ class AppView(tk.Tk):
         return self.grid
 
     def show(self):
-        """Show the view
         """
-        # self.hello_label.pack(side="top")
-        # self.show_button.pack(side="left", padx=10, pady=5)
+        Show the view
+        """
         self.new_map_button.pack(side="left", padx=10, pady=5)
         self.save_map_button.pack(side="left", padx=10, pady=5)
         self.load_map_button.pack(side="left", padx=10, pady=5)
@@ -111,9 +102,6 @@ class AppView(tk.Tk):
         self.reset_button.pack(side="left", padx=10, pady=5)
         self.buttons_frame.pack(side="top")
         self.grid.show()
-
-    # def call_controller_show_agents(self):
-    #    self.listener.show_agents()
 
 
     def _call_controller_random_move(self):

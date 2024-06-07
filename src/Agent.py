@@ -19,7 +19,7 @@ move_list = ["N", "S", "W", "E", "A"]
 class Agent:
     def __init__(self, init_pos=None, input_size=25, output_size=5,
                  epsilon=0.9,
-                 decay=0.9729,
+                 decay=0.9863,
                  gamma=0.9,
                  loss_fct="mse",
                  opt_fct="adam",
@@ -45,6 +45,7 @@ class Agent:
         self.model = tf.keras.models.Sequential()
         self.model.add(tf.keras.layers.Dense(64, activation="relu", input_shape=(input_size,)))
         #self.model.add(tf.keras.layers.Dense(64, activation="relu"))
+        # self.model.add(tf.keras.layers.Dense(64, activation="relu"))
         self.model.add(tf.keras.layers.Dense(64, activation="relu"))
         self.model.add(tf.keras.layers.Dense(32, activation="relu"))
         self.model.add(tf.keras.layers.Dense(output_size, activation="linear"))

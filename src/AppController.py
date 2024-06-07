@@ -3,10 +3,12 @@ import tkinter.messagebox as msg
 import os
 from tkinter import filedialog as fd
 
-import copy
 import random
 import threading as thr
 import time
+
+# For the training
+from tqdm import tqdm
 
 from AppView import AppView
 from progression_bar_view import ProgressBarView
@@ -14,10 +16,6 @@ from simuChoiceView import SimuChoiceView
 from map import Map
 from gameState import GameState
 from Agent import (Agent, CombatAgent)
-
-# For the training
-from tqdm import tqdm
-import os
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # To disable the spam Warning from TensorFlow
 
@@ -28,8 +26,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         self.appView = AppView()
         self.appView.setListener(self)
 
-        # Create the map, the grid and the gameState
-        # agent: (x, y, hp, decisionAgent)
+        # Create the agents, the map, the grid and the gameState
         self.decisionAgent_blue_melee = CombatAgent(color="blue", atk_range=1, atk=10)
         self.decisionAgent_blue_range = CombatAgent(color="blue", atk_range=2, atk=10)
         self.decisionAgent_red_melee = CombatAgent(color="red", atk_range=1, atk=10)
@@ -59,20 +56,16 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         self.speed_simu = self.appView.get_speed_simu()
 
     def run(self):
-        """Launch the application
         """
-        """Launch the application
+        Launch the application
         """
         self.appView.show()
         self.appView.mainloop()
 
-    def show_agents(self):
-        """Show the agents on the grid
-        """
-        self.grid.update(self.gameState)
-
     def train_model(self):
-        # TODO interface graphique permetant de visualiser la progression du training
+        """
+        Show the progress bar window and launch the thread that make the training
+        """
         pb = ProgressBarView(self.appView)
         pb.show()
         
@@ -80,8 +73,11 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
             self.train_thread = thr.Thread(target=self._train_model, name="train_thread", args=[pb], daemon=True)
             self.train_thread.start()
         
-    
-    def _train_model(self, progress_bar):
+    def _train_model(self, progress_bar: ProgressBarView):
+        """
+        Train the ML model
+        :param progress_bar: the view of the progress bar
+        """
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Disable the spam Warning from TensorFlow
         episodes = 200
         progress_bar.set_value(episodes)
@@ -133,13 +129,9 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
                     else:
                         actions[a] = 0
                 
-                #print("nb agents actions =", len(actions.keys()))
                 rewards = train_gameState.update_state(actions)
-                #print("nb agents rewards =", len(rewards.keys()))
                 self.grid.update(train_gameState)
-
                 new_states = train_gameState.get_infos(self.agents)
-                
 
                 for a in self.agents:
                     if agent_status[a]:
@@ -154,13 +146,9 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
                                 done = True
                         decision_agent = self.agents[a]["AI"]
                         new_states[a] = new_states[a] + [hp]
-                        # Train the agent over this single step
-                        #decision_agent.training_montage(old_states[a], rewards[a], new_states[a], end)
 
+                        # Train the agents per batch every 64 steps (batch size = 64)
                         if (step_nbr % 64 == 0 and step_nbr !=0) or end or done:
-                            #print(step_nbr)
-                            # training step
-                            #print(len(list_old_states))
                             decision_agent.training_montage(tuple(list_old_states[a]), tuple(list_rewards[a]), tuple(list_new_states[a]), tuple(list_end[a]))
                             list_old_states[a].clear()
                             list_rewards[a].clear()
@@ -168,39 +156,27 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
                             list_end[a].clear()
                         else:
                             list_old_states[a].append(old_states[a])
-                            #print(rewards.keys())
                             list_rewards[a].append(rewards[a])
                             list_new_states[a].append(new_states[a])
                             list_end[a].append(end)
 
                         # Remember this action and its consequence for later
                         decision_agent.fill_memory(old_states[a], rewards[a], new_states[a], end)
-                    #else:
-                    #    new_states[a] = 0
-
-                #print(step_nbr)
                 step_nbr += 1
-
-                #for team, count in team_number_alive.items():  # if 1 team is completely dead
-                #    if count == 0:
-                #        done = True
             
-            #start = time.time_ns()
             for decision_agent_name, decision_agent in self.decisionAgents.items():
                 decision_agent.train_long_memory()
-            #e_time = (time.time_ns() - start) / 1000000
-            #print("time for train long memory:", e_time, "ms")
-
             
+            # Save intermediate models
             for decision_agent_name, decision_agent in self.decisionAgents.items():
                 decision_agent: Agent
                 decision_agent.save(f"../weights_rl/temp/{decision_agent_name}.weights.h5")
             
-
             self._reset_pos_agents()
             train_gameState.set_map(train_map)
             progress_bar.update_progress(i + 1) # update progress in progessbar
-            
+        
+        # Save the final models
         t = time.ctime()
         path = "../weights_rl/"
         for l in t:
@@ -212,9 +188,9 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
             decision_agent: Agent
             decision_agent.save(f"{path}/{decision_agent_name}.weights.h5")
         
-
     def random_move(self):
-        """Perform a random movement for all agents. (the movement may fail)
+        """
+        Perform a random action for all agents. (the action may fail)
         """
         actions = {}
         for a in self.agents:
@@ -227,6 +203,9 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         self.grid.update(self.gameState)  # Show changes on the graphical interface
         
     def trained_move(self):
+        """
+        Perform the best action for all agents accordind to the trained ML model. (the action may fail)
+        """
         actions = {}
         for a in self.agents:
             decision_agent = self.agents[a]["AI"]
@@ -241,7 +220,8 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         self.grid.update(self.gameState)  # Show changes on the graphical interface
 
     def new_map(self):
-        """Change the map (randomly)
+        """
+        Change the map (randomly)
         """
         self.map.reset(random=True)
         # Place the agents in their bases on the map
@@ -252,19 +232,26 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         self.grid.update(self.gameState)
 
     def run_simu(self):
-        """Launch the simulation
+        """
+        Launch the simulation
         """
         choice = SimuChoiceView(self.appView)
         choice.set_listener(self)
         choice.show()
             
     def run_random_simu(self):
+        """
+        Launch a random simulation
+        """
         if self.simu_thread is None or not self.simu_thread.is_alive():
             self.running = True
             self.simu_thread = thr.Thread(target=self._run_random_simu, name="simu_thread", args=[self.speed_simu], daemon=True)
             self.simu_thread.start()
             
     def run_trained_simu(self):
+        """
+        Launch a simulation using the trained ML model
+        """
         try:
             dir = fd.askdirectory(initialdir="../weights_rl")
             for decision_agent_name, decision_agent in self.decisionAgents.items():
@@ -279,6 +266,9 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
             self.simu_thread.start()
 
     def _run_random_simu(self, speed):
+        """
+        Run a random simulation
+        """
         while self.running:
             team_color = {}
             for a in self.agents.keys():
@@ -293,7 +283,10 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
             self.random_move()
             time.sleep(1 / speed.get())
             
-    def _run_trained_simu(self, speed):                    
+    def _run_trained_simu(self, speed):
+        """
+        Run a simulation using the trained ML model
+        """              
         while self.running:
             team_color = {}
             for a in self.agents.keys():
@@ -309,11 +302,15 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
             time.sleep(1 / speed.get())
 
     def stop_simu(self):
-        """Stop the simulation
+        """
+        Stop the simulation
         """
         self.running = False
 
     def save_map(self):
+        """
+        Save the current map
+        """
         if (os.path.exists("./maps")):
             dir = "./maps"
         elif (os.path.exists("../maps")):
@@ -325,6 +322,9 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
             self.map.save(file)
 
     def load_map(self):
+        """
+        Load an existing map
+        """
         if (os.path.exists("./maps")):
             dir = "./maps"
         elif (os.path.exists("../maps")):
@@ -344,11 +344,17 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         self.grid.update(self.gameState)
 
     def _reset_pos_agents(self):
+        """
+        Reset the position and the hp of all agents
+        """
         for a in self.agents.keys():
             self.agents[a]["position"] = self.map.agents_bases[a]["position"]
             self.agents[a]["hp"] = self.agents[a]["hpMax"]
             
     def reset(self):
+        """
+        Reset the state of the agents, the gamestate and the grid (the visualisation)
+        """
         self._reset_pos_agents()
         self.gameState.set_map(self.map)
         self.grid.update(self.gameState)

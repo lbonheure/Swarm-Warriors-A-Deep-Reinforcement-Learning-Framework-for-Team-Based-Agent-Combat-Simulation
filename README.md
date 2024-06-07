@@ -1,4 +1,4 @@
-# INFO-H512 ABM robots simulations
+# Swarm-Warriors: A Deep Reinforcement Learning Framework for Team-Based Agent Combat Simulation
 
 ## Third-party libraries
 

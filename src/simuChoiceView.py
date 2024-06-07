@@ -23,9 +23,16 @@ class SimuChoiceView(tk.Toplevel):
         self.listener = None
         
     def set_listener(self, l: Listener):
+        """
+        Set the view listener
+        :param l: the listener
+        """
         self.listener = l
         
     def show(self):
+        """
+        Show the window
+        """
         self.r_simu.pack(padx=5, pady=5)
         self.ia_simu.pack(padx=5, pady=5)
         self.ok_button.pack(padx=5, pady=5)

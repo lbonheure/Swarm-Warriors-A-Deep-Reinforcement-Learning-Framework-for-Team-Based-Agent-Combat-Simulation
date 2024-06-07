@@ -68,11 +68,11 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         """
         pb = ProgressBarView(self.appView)
         pb.show()
-        
+
         if self.train_thread is None or not self.train_thread.is_alive():
             self.train_thread = thr.Thread(target=self._train_model, name="train_thread", args=[pb], daemon=True)
             self.train_thread.start()
-        
+
     def _train_model(self, progress_bar: ProgressBarView):
         """
         Train the ML model
@@ -81,10 +81,10 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Disable the spam Warning from TensorFlow
         episodes = 200
         progress_bar.set_value(episodes)
-        list_old_states = {a:[] for a in self.agents.keys()}
-        list_rewards = {a:[] for a in self.agents.keys()}
-        list_new_states = {a:[] for a in self.agents.keys()}
-        list_end = {a:[] for a in self.agents.keys()}
+        list_old_states = {a: [] for a in self.agents.keys()}
+        list_rewards = {a: [] for a in self.agents.keys()}
+        list_new_states = {a: [] for a in self.agents.keys()}
+        list_end = {a: [] for a in self.agents.keys()}
         for i in tqdm(range(episodes)):
             done = False
             step_nbr = 0
@@ -99,17 +99,17 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
                     team_number_alive[team_color] += 1
 
             agent_status = {agent_id: True for agent_id, agent_info in self.agents.items()}
-            
-            if i % 20 == 0: # Change the map every 20 episodes
+
+            if i % 20 == 0:  # Change the map every 20 episodes
                 # Load the map
                 train_map = Map(random=True, agent_bases=self.agents)
-                if i == 180: # Last 20 episodes with the predefined map0
+                if i == 180:  # Last 20 episodes with the predefined map0
                     train_map.load_filename("map0.csv")
                 self.grid.set_map(train_map)
                 # Place the agents in their bases on the map
                 self._reset_pos_agents()
                 train_gameState = GameState(train_map, self.agents)
-            
+
             while not done:
                 if step_nbr == 512:
                     done = True
@@ -128,7 +128,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
                         actions[a] = d
                     else:
                         actions[a] = 0
-                
+
                 rewards = train_gameState.update_state(actions)
                 self.grid.update(train_gameState)
                 new_states = train_gameState.get_infos(self.agents)
@@ -148,8 +148,9 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
                         new_states[a] = new_states[a] + [hp]
 
                         # Train the agents per batch every 64 steps (batch size = 64)
-                        if (step_nbr % 64 == 0 and step_nbr !=0) or end or done:
-                            decision_agent.training_montage(tuple(list_old_states[a]), tuple(list_rewards[a]), tuple(list_new_states[a]), tuple(list_end[a]))
+                        if (step_nbr % 64 == 0 and step_nbr != 0) or end or done:
+                            decision_agent.training_montage(tuple(list_old_states[a]), tuple(list_rewards[a]),
+                                                            tuple(list_new_states[a]), tuple(list_end[a]))
                             list_old_states[a].clear()
                             list_rewards[a].clear()
                             list_new_states[a].clear()
@@ -163,19 +164,19 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
                         # Remember this action and its consequence for later
                         decision_agent.fill_memory(old_states[a], rewards[a], new_states[a], end)
                 step_nbr += 1
-            
+
             for decision_agent_name, decision_agent in self.decisionAgents.items():
                 decision_agent.train_long_memory()
-            
+
             # Save intermediate models
             for decision_agent_name, decision_agent in self.decisionAgents.items():
                 decision_agent: Agent
                 decision_agent.save(f"../weights_rl/temp/{decision_agent_name}.weights.h5")
-            
+
             self._reset_pos_agents()
             train_gameState.set_map(train_map)
-            progress_bar.update_progress(i + 1) # update progress in progessbar
-        
+            progress_bar.update_progress(i + 1)  # update progress in progressbar
+
         # Save the final models
         t = time.ctime()
         path = "../weights_rl/"
@@ -187,7 +188,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         for decision_agent_name, decision_agent in self.decisionAgents.items():
             decision_agent: Agent
             decision_agent.save(f"{path}/{decision_agent_name}.weights.h5")
-        
+
     def random_move(self):
         """
         Perform a random action for all agents. (the action may fail)
@@ -201,10 +202,10 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
             actions[a] = d
         self.gameState.update_state(actions)
         self.grid.update(self.gameState)  # Show changes on the graphical interface
-        
+
     def trained_move(self):
         """
-        Perform the best action for all agents accordind to the trained ML model. (the action may fail)
+        Perform the best action for all agents according to the trained ML model. (the action may fail)
         """
         actions = {}
         for a in self.agents:
@@ -238,16 +239,17 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         choice = SimuChoiceView(self.appView)
         choice.set_listener(self)
         choice.show()
-            
+
     def run_random_simu(self):
         """
         Launch a random simulation
         """
         if self.simu_thread is None or not self.simu_thread.is_alive():
             self.running = True
-            self.simu_thread = thr.Thread(target=self._run_random_simu, name="simu_thread", args=[self.speed_simu], daemon=True)
+            self.simu_thread = thr.Thread(target=self._run_random_simu, name="simu_thread", args=[self.speed_simu],
+                                          daemon=True)
             self.simu_thread.start()
-            
+
     def run_trained_simu(self):
         """
         Launch a simulation using the trained ML model
@@ -259,10 +261,12 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
                 decision_agent.load(f"{dir}/{decision_agent_name}.weights.h5")
         except:
             msg.showwarning("Error in model loading",
-                            "No suitable models were found. Please train the model before running the simulation. By default, the simulation will be run with the untrained model")
+                            "No suitable models were found. Please train the model before running the simulation. By "
+                            "default, the simulation will be run with the untrained model")
         if self.simu_thread is None or not self.simu_thread.is_alive():
             self.running = True
-            self.simu_thread = thr.Thread(target=self._run_trained_simu, name="simu_thread", args=[self.speed_simu], daemon=True)
+            self.simu_thread = thr.Thread(target=self._run_trained_simu, name="simu_thread", args=[self.speed_simu],
+                                          daemon=True)
             self.simu_thread.start()
 
     def _run_random_simu(self, speed):
@@ -279,14 +283,14 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
                 # Only 1 team is left
                 self.running = False
                 break
-                    
+
             self.random_move()
             time.sleep(1 / speed.get())
-            
+
     def _run_trained_simu(self, speed):
         """
         Run a simulation using the trained ML model
-        """              
+        """
         while self.running:
             team_color = {}
             for a in self.agents.keys():
@@ -297,7 +301,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
                 # Only 1 team is left
                 self.running = False
                 break
-                
+
             self.trained_move()
             time.sleep(1 / speed.get())
 
@@ -311,9 +315,9 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         """
         Save the current map
         """
-        if (os.path.exists("./maps")):
+        if os.path.exists("./maps"):
             dir = "./maps"
-        elif (os.path.exists("../maps")):
+        elif os.path.exists("../maps"):
             dir = "../maps"
         else:
             dir = "."
@@ -325,9 +329,9 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         """
         Load an existing map
         """
-        if (os.path.exists("./maps")):
+        if os.path.exists("./maps"):
             dir = "./maps"
-        elif (os.path.exists("../maps")):
+        elif os.path.exists("../maps"):
             dir = "../maps"
         else:
             dir = "."
@@ -350,7 +354,7 @@ class AppController(AppView.Listener, SimuChoiceView.Listener):
         for a in self.agents.keys():
             self.agents[a]["position"] = self.map.agents_bases[a]["position"]
             self.agents[a]["hp"] = self.agents[a]["hpMax"]
-            
+
     def reset(self):
         """
         Reset the state of the agents, the gamestate and the grid (the visualisation)

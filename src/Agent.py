@@ -44,15 +44,14 @@ class Agent:
         # Structure of NN
         self.model = tf.keras.models.Sequential()
         self.model.add(tf.keras.layers.Dense(64, activation="relu", input_shape=(input_size,)))
-        #self.model.add(tf.keras.layers.Dense(64, activation="relu"))
+        # self.model.add(tf.keras.layers.Dense(64, activation="relu"))
         # self.model.add(tf.keras.layers.Dense(64, activation="relu"))
         self.model.add(tf.keras.layers.Dense(64, activation="relu"))
         self.model.add(tf.keras.layers.Dense(32, activation="relu"))
         self.model.add(tf.keras.layers.Dense(output_size, activation="linear"))
         self.model.compile(
             optimizer=self.opt_fct, loss=self.loss_fct, metrics=self.metrics)
-        
-        
+
     def calculate_decay(self, episodes):
         """
         Compute the value of decay parameter in function of the number of training episodes
@@ -60,7 +59,6 @@ class Agent:
         """
         target_ratio = self.epsilon_min / self.epsilon
         self.decay = target_ratio ** (1 / (0.8 * episodes))
-
 
     def train_long_memory(self, batch_size=64):
         """
@@ -95,8 +93,7 @@ class Agent:
         state = tf.convert_to_tensor(state, dtype=tf.float32)
         reward = tf.convert_to_tensor(reward, dtype=tf.float32)
         next_state = tf.convert_to_tensor(next_state, dtype=tf.float32)
-        #print("state tensor=", state)
-        
+        # print("state tensor=", state)
 
         if len(state.shape) == 1:
             state = tf.expand_dims(state, 0)
@@ -120,11 +117,11 @@ class Agent:
         dataset = tf.convert_to_tensor(dataset)
         target = tf.convert_to_tensor(target)
 
-        #start = time.time_ns()
+        # start = time.time_ns()
         self.model.train_on_batch(
             dataset, target
         )
-        #print("time train on batch", (time.time_ns() - start)/1000000, "ms")
+        # print("time train on batch", (time.time_ns() - start)/1000000, "ms")
 
     def act_train(self, state):
         """

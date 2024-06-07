@@ -106,7 +106,7 @@ class Map:
         file.close()
 
     def load_filename(self, filename):
-        if (os.path.exists(filename)):
+        if os.path.exists(filename):
             file = open(filename, "r")
             self.load(file)
         else:
@@ -167,7 +167,7 @@ class Map:
         # 1. Clear previous positions
         self.resources_positions.clear()
 
-        # 2. Seach possible positions
+        # 2. Search possible positions
         possible_positions = []
         for x in range(self.width):
             for y in range(self.height):
@@ -196,7 +196,7 @@ class Map:
         # 1. Clear previous positions
         self.walls_positions.clear()
 
-        # 2. Seach possible positions
+        # 2. Search possible positions
         possible_positions = []
         for x in range(self.width):
             for y in range(self.height):

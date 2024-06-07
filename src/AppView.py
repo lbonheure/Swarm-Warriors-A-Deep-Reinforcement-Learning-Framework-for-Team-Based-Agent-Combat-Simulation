@@ -10,13 +10,13 @@ class AppView(tk.Tk):
 
         def new_map(self):
             pass
-        
+
         def save_map(self):
             pass
-        
+
         def load_map(self):
             pass
-        
+
         def train_model(self):
             pass
 
@@ -28,7 +28,7 @@ class AppView(tk.Tk):
 
         def modify_speed(self, value):
             pass
-        
+
         def reset(self):
             pass
 
@@ -103,7 +103,6 @@ class AppView(tk.Tk):
         self.buttons_frame.pack(side="top")
         self.grid.show()
 
-
     def _call_controller_random_move(self):
         self.listener.random_move()
 
@@ -118,15 +117,15 @@ class AppView(tk.Tk):
 
     def _call_controller_modify_speed(self, value):
         self.listener.modify_speed(int(value))
-        
+
     def _call_controller_train_model(self):
         self.listener.train_model()
-        
+
     def _call_controller_save_map(self):
         self.listener.save_map()
-        
+
     def _call_controller_load_map(self):
         self.listener.load_map()
-        
+
     def _call_controller_reset(self):
         self.listener.reset()
